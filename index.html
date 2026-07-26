@@ -1,663 +1,219 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Calculadora Xerox do Victor</title>
-  <!-- Tailwind CSS v3 -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- DaisyUI v4 -->
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Stimulus -->
-  <script src="https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.min.js"></script>
-  <style>
-    [data-controller="calculator"] { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .input:focus { transform: scale(1.02); }
-    .tab { transition: all 0.2s ease; }
-    .tab-active { transform: scale(1.02); }
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
-    .input-error { border-color: #ef4444 !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Xerox do Victor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f3f4f6;color:#111827}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 12px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;padding-left:16px}
+th:last-child,td:last-child{padding-right:16px}
+tbody tr:not(:last-child){border-bottom:1px solid #e5e7eb}
+tbody tr:hover{background:#f9fafb}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{opacity:0.4}
+.col-qty{width:80px;min-width:80px}
+.col-price{width:140px;min-width:140px}
+.col-cut{width:60px;min-width:60px;text-align:center}
+.col-sub{width:110px;min-width:110px}
+</style>
 </head>
 <body>
 
-<!-- ===== DATA ===== -->
+<div id="app" class="min-h-screen">
+  <!-- Header -->
+  <div class="bg-gray-900 text-white px-4 py-5">
+    <div class="max-w-7xl mx-auto flex items-center gap-3">
+      <img src="https://raw.githubusercontent.com/bruno-xerox/calculadora/refs/heads/main/logo%20xerox%20branco.png" alt="Logo Xerox" class="h-9">
+      <h1 class="text-xl font-bold">Calculadora Xerox do Victor</h1>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 py-4">
+
+    <!-- Grand Total -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
+      <div>
+        <span class="font-semibold text-gray-900">Total Geral</span>
+        <p class="text-xs text-gray-500">Todos os serviços</p>
+      </div>
+      <span class="text-2xl font-bold text-gray-900" id="grandTotal">R$ 0,00</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-4 bg-white border border-gray-200 rounded-lg p-1 shadow-sm" id="tabs"></div>
+
+    <!-- Categories -->
+    <div id="contents"></div>
+
+    <!-- Bottom Total -->
+    <div class="bg-gray-900 text-white rounded-lg p-5 mt-6 flex items-center justify-between shadow-sm">
+      <div>
+        <h2 class="text-lg font-bold">Total Geral</h2>
+        <p class="text-xs text-gray-400">Preço calculado conforme tabela de descontos por quantidade</p>
+      </div>
+      <span class="text-3xl font-bold" id="grandTotal2">R$ 0,00</span>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── All categories and items embedded directly ──
-const CATEGORIES = [
-  {
-    id: 1, name: "Color", display_order: 1,
-    icon: "fa-palette",
-    items: [
-      { id: 27, group_name: "Papel comum", name: "A4", pricing_rules: {"type":"tiered","tiers":[{"rate":1.2,"min_qty":111},{"rate":2,"min_qty":51},{"rate":2.5,"min_qty":31},{"rate":3,"min_qty":16},{"rate":3.5,"min_qty":0}]} },
-      { id: 28, group_name: "Papel comum", name: "A3", pricing_rules: {"type":"tiered","tiers":[{"rate":3.5,"min_qty":101},{"rate":4.5,"min_qty":51},{"rate":5.5,"min_qty":21},{"rate":6,"min_qty":11},{"rate":7,"min_qty":0}]} },
-      { id: 29, group_name: "Papel comum", name: "A2 traço", pricing_rules: {"rate":10.45,"type":"flat"} },
-      { id: 30, group_name: "Papel comum", name: "A2 imagem", pricing_rules: {"rate":26.65,"type":"flat"} },
-      { id: 31, group_name: "Papel comum", name: "A1 traço", pricing_rules: {"rate":11.55,"type":"flat"} },
-      { id: 32, group_name: "Papel comum", name: "A1 imagem", pricing_rules: {"rate":39.9,"type":"flat"} },
-      { id: 33, group_name: "Papel comum", name: "A0 traço", pricing_rules: {"rate":22.55,"type":"flat"} },
-      { id: 34, group_name: "Papel comum", name: "A0 imagem", pricing_rules: {"rate":79.85,"type":"flat"} },
-      { id: 35, group_name: "Cartão / Couchê 180/170g", name: "A4", pricing_rules: {"type":"tiered","tiers":[{"rate":2.5,"min_qty":101},{"rate":3,"min_qty":51},{"rate":3.5,"min_qty":31},{"rate":5,"min_qty":0}]} },
-      { id: 36, group_name: "Cartão / Couchê 180/170g", name: "A3", pricing_rules: {"type":"tiered","tiers":[{"rate":6.5,"min_qty":101},{"rate":7,"min_qty":51},{"rate":8,"min_qty":21},{"rate":12,"min_qty":0}]} },
-      { id: 37, group_name: "Cartão / Couchê 250g", name: "A4", pricing_rules: {"type":"tiered","tiers":[{"rate":3,"min_qty":101},{"rate":3.5,"min_qty":51},{"rate":4.5,"min_qty":31},{"rate":5.5,"min_qty":16},{"rate":6,"min_qty":0}]} },
-      { id: 38, group_name: "Cartão / Couchê 250g", name: "A3", pricing_rules: {"type":"tiered","tiers":[{"rate":6,"min_qty":101},{"rate":7,"min_qty":51},{"rate":9,"min_qty":21},{"rate":13,"min_qty":0}]} },
-      { id: 39, group_name: "Adesivo", name: "A4", pricing_rules: {"type":"tiered","tiers":[{"rate":5.5,"min_qty":11},{"rate":6.5,"min_qty":0}]} },
-      { id: 40, group_name: "Adesivo", name: "A3", pricing_rules: {"type":"tiered","tiers":[{"rate":9,"min_qty":21},{"rate":10,"min_qty":11},{"rate":12,"min_qty":0}]} },
-      { id: 41, group_name: "Vegetal", name: "A4", pricing_rules: {"rate":7,"type":"flat"} },
-      { id: 42, group_name: "Vegetal", name: "A3", pricing_rules: {"type":"tiered","tiers":[{"rate":8,"min_qty":12},{"rate":10,"min_qty":0}]} }
-    ]
-  },
-  {
-    id: 2, name: "P/B", display_order: 2,
-    icon: "fa-file-lines",
-    items: [
-      { id: 43, group_name: "Papel comum", name: "A4", pricing_rules: {"type":"tiered","tiers":[{"rate":0.2,"min_qty":751},{"rate":0.25,"min_qty":501},{"rate":0.35,"min_qty":251},{"rate":0.4,"min_qty":101},{"rate":0.5,"min_qty":4},{"rate":1,"min_qty":0}]} },
-      { id: 44, group_name: "Papel comum", name: "A3", pricing_rules: {"rate":2,"type":"flat"} },
-      { id: 45, group_name: "Papel comum", name: "A2 traço", pricing_rules: {"rate":7.15,"type":"flat"} },
-      { id: 46, group_name: "Papel comum", name: "A2 imagem", pricing_rules: {"rate":21.25,"type":"flat"} },
-      { id: 47, group_name: "Papel comum", name: "A1 traço", pricing_rules: {"rate":10.15,"type":"flat"} },
-      { id: 48, group_name: "Papel comum", name: "A1 imagem", pricing_rules: {"rate":32.45,"type":"flat"} },
-      { id: 49, group_name: "Papel comum", name: "A0 traço", pricing_rules: {"rate":18.6,"type":"flat"} },
-      { id: 50, group_name: "Papel comum", name: "A0 imagem", pricing_rules: {"rate":63.5,"type":"flat"} }
-    ]
-  },
-  {
-    id: 3, name: "Adesivos", display_order: 3,
-    icon: "fa-tag",
-    items: [
-      { id: 51, group_name: "Leitoso corte simples", name: "Até 1 m²", pricing_rules: {"type":"adhesive","bleed":0.002,"tiers":[{"rate":50,"min_m2":4.01},{"rate":55,"min_m2":1.01},{"rate":60,"min_m2":0}],"min_charge":30} },
-      { id: 52, group_name: "Leitoso corte contorno", name: "Até 1 m²", pricing_rules: {"type":"adhesive","bleed":0.002,"tiers":[{"rate":55,"min_m2":4.01},{"rate":65,"min_m2":2.01},{"rate":80,"min_m2":1.01},{"rate":120,"min_m2":0}],"min_charge":45} }
-    ]
+// ========== DATA ==========
+const categories = [
+  {id:1,name:"Color",groups:[
+    {name:"Papel comum",items:[
+      {id:27,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:1.2,min_qty:111},{rate:2,min_qty:51},{rate:2.5,min_qty:31},{rate:3,min_qty:16},{rate:3.5,min_qty:0}]}},
+      {id:28,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:3.5,min_qty:101},{rate:4.5,min_qty:51},{rate:5.5,min_qty:21},{rate:6,min_qty:11},{rate:7,min_qty:0}]}},
+      {id:29,name:"A2 traço",pricing_rules:{rate:10.45,type:"flat"}},
+      {id:30,name:"A2 imagem",pricing_rules:{rate:26.65,type:"flat"}},
+      {id:31,name:"A1 traço",pricing_rules:{rate:11.55,type:"flat"}},
+      {id:32,name:"A1 imagem",pricing_rules:{rate:39.9,type:"flat"}},
+      {id:33,name:"A0 traço",pricing_rules:{rate:22.55,type:"flat"}},
+      {id:34,name:"A0 imagem",pricing_rules:{rate:79.85,type:"flat"}}
+    ]},
+    {name:"Cartão / Couchê 180/170g",items:[
+      {id:35,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:2.5,min_qty:101},{rate:3,min_qty:51},{rate:3.5,min_qty:31},{rate:5,min_qty:0}]}},
+      {id:36,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:6.5,min_qty:101},{rate:7,min_qty:51},{rate:8,min_qty:21},{rate:12,min_qty:0}]}}
+    ]},
+    {name:"Cartão / Couchê 250g",items:[
+      {id:37,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:3,min_qty:101},{rate:3.5,min_qty:51},{rate:4.5,min_qty:31},{rate:5.5,min_qty:16},{rate:6,min_qty:0}]}},
+      {id:38,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:6,min_qty:101},{rate:7,min_qty:51},{rate:9,min_qty:21},{rate:13,min_qty:0}]}}
+    ]},
+    {name:"Adesivo",items:[
+      {id:39,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:5.5,min_qty:11},{rate:6.5,min_qty:0}]}},
+      {id:40,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:9,min_qty:21},{rate:10,min_qty:11},{rate:12,min_qty:0}]}}
+    ]},
+    {name:"Vegetal",items:[
+      {id:41,name:"A4",pricing_rules:{rate:7,type:"flat"}},
+      {id:42,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
+    ]}
+  ]},
+  {id:2,name:"P/B",groups:[
+    {name:"Papel comum",items:[
+      {id:43,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:0.2,min_qty:751},{rate:0.25,min_qty:501},{rate:0.35,min_qty:251},{rate:0.4,min_qty:101},{rate:0.5,min_qty:4},{rate:1,min_qty:0}]}},
+      {id:44,name:"A3",pricing_rules:{rate:2,type:"flat"}},
+      {id:45,name:"A2 traço",pricing_rules:{rate:7.15,type:"flat"}},
+      {id:46,name:"A2 imagem",pricing_rules:{rate:21.25,type:"flat"}},
+      {id:47,name:"A1 traço",pricing_rules:{rate:10.15,type:"flat"}},
+      {id:48,name:"A1 imagem",pricing_rules:{rate:32.45,type:"flat"}},
+      {id:49,name:"A0 traço",pricing_rules:{rate:18.6,type:"flat"}},
+      {id:50,name:"A0 imagem",pricing_rules:{rate:63.5,type:"flat"}}
+    ]}
+  ]},
+  {id:3,name:"Adesivos",groups:[
+    {name:"Leitoso corte simples",items:[
+      {id:51,name:"Até 1 m²",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:50,min_m2:4.01},{rate:55,min_m2:1.01},{rate:60,min_m2:0}],min_charge:30}}
+    ]},
+    {name:"Leitoso corte contorno",items:[
+      {id:52,name:"Até 1 m²",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:55,min_m2:4.01},{rate:65,min_m2:2.01},{rate:80,min_m2:1.01},{rate:120,min_m2:0}],min_charge:45}}
+    ]}
+  ]}
+];
+
+// ========== HELPERS ==========
+const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
+const parse = v => { if(!v)return 0; const c=v.replace(/[R$\s]/g,"").replace(/\./g,"").replace(",","."); return parseFloat(c)||0; };
+const findRate = (q,t)=>{for(const r of t)if(q>=r.min_qty)return r.rate;return t[t.length-1]?.rate||0};
+const findAdh = (m,t)=>{for(const r of t)if(m>=r.min_m2)return r.rate;return t[t.length-1]?.rate||0};
+
+function recalc(){
+  let total=0;
+  document.querySelectorAll("[data-st]").forEach(el=>total+=parse(el.textContent));
+  document.getElementById("grandTotal").textContent=fmt(total);
+  document.getElementById("grandTotal2").textContent=fmt(total);
+  document.querySelectorAll("[data-group]").forEach(g=>{
+    let t=0;g.querySelectorAll("[data-st]").forEach(e=>t+=parse(e.textContent));
+    const el=g.querySelector("[data-gt]");if(el)el.textContent=fmt(t);
+  });
+  document.querySelectorAll("[data-cat]").forEach(c=>{
+    let t=0;c.querySelectorAll("[data-st]").forEach(e=>t+=parse(e.textContent));
+    const el=c.querySelector("[data-ct]");if(el)el.textContent=fmt(t);
+  });
+}
+
+function calcRow(row){
+  const rules=JSON.parse(row.dataset.rules);
+  const qty=parseFloat(row.querySelector("[data-qty]")?.value)||0;
+  let sub=0;
+  if(rules.type==="flat") sub=qty*rules.rate;
+  else if(rules.type==="tiered") sub=qty*findRate(qty,rules.tiers);
+  else if(rules.type==="adhesive"){
+    const w=parseFloat(row.querySelector("[data-w]")?.value)||0;
+    const h=parseFloat(row.querySelector("[data-h]")?.value)||0;
+    const b=rules.bleed||0;
+    if(w>0&&h>0){
+      const m2=(w+b)*(h+b)*qty;
+      sub=Math.max(m2*findAdh(m2,rules.tiers),rules.min_charge||0);
+      const e=row.querySelector("[data-m2]");if(e)e.textContent=m2.toFixed(3);
+    }
   }
-]
+  const cut=row.querySelector("[data-cut]");
+  if(cut&&cut.checked&&qty>0) sub+=qty*1;
+  const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
+  recalc();
+}
+
+// ========== RENDER ==========
+const tabsEl=document.getElementById("tabs");
+categories.forEach((c,i)=>{
+  const b=document.createElement("button");
+  b.className=`flex-1 py-2 px-3 text-sm font-medium rounded-md transition cursor-pointer ${i===0?"bg-gray-900 text-white":"text-gray-700 hover:bg-gray-100"}`;
+  b.textContent=c.name;
+  b.onclick=function(){
+    tabsEl.querySelectorAll("button").forEach(t=>{t.className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition cursor-pointer text-gray-700 hover:bg-gray-100"});
+    this.className="flex-1 py-2 px-3 text-sm font-medium rounded-md transition cursor-pointer bg-gray-900 text-white";
+    document.querySelectorAll("[data-cat]").forEach(el=>el.classList.add("hidden"));
+    const t=document.getElementById("cat_"+this.dataset.id);
+    if(t)t.classList.remove("hidden");
+  };
+  b.dataset.id=c.id;
+  tabsEl.appendChild(b);
+});
+
+const contentsEl=document.getElementById("contents");
+categories.forEach((c,ci)=>{
+  const div=document.createElement("div");div.id="cat_"+c.id;div.dataset.cat=c.id;
+  div.className=(ci===0?"":"hidden ")+"space-y-4";
+  c.groups.forEach(g=>{
+    const isPaper=g.name.includes("Papel comum");
+    const isAdesivos=c.name==="Adesivos";
+    const showCut=!isPaper&&!isAdesivos;
+    const isAdh=g.items.some(i=>i.pricing_rules?.type==="adhesive");
+    const grp=document.createElement("div");grp.className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm";grp.dataset.group=g.name;
+    let html=`<div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2"><div class="w-1 h-6 bg-gray-500 rounded-full"></div><h3 class="font-semibold text-sm">${g.name}</h3><span class="ml-auto text-xs text-gray-500">Subtotal: <span class="font-bold text-gray-900" data-gt>R$ 0,00</span></span></div>`;
+    html+=`<table><thead><tr class="text-xs uppercase text-gray-500 bg-gray-50/50">`;
+    html+=`<th>Item</th><th class="col-price">Preço Unit.</th><th class="col-qty">Qtde.</th>`;
+    if(showCut) html+=`<th class="col-cut">Corte?</th>`;
+    if(isAdh) html+=`<th>Largura</th><th>Altura</th><th>m²</th>`;
+    html+=`<th class="col-sub">Subtotal</th></tr></thead><tbody>`;
+    g.items.forEach(item=>{
+      const r=item.pricing_rules;
+      let pd="";
+      if(r.type==="flat") pd=`R$ ${r.rate.toFixed(2)}`;
+      else if(r.type==="tiered") pd=r.tiers.map(t=>"R$ "+t.rate.toFixed(2)).join(" | ");
+      else if(r.type==="adhesive") pd=r.tiers.map(t=>"R$ "+t.rate.toFixed(2)+"/m²").join(" | ");
+      const isAdhesive=r?.type==="adhesive";
+      html+=`<tr data-rules='${JSON.stringify(r).replace(/'/g,"&#39;")}'>`;
+      html+=`<td class="font-medium text-sm">${item.name}</td>`;
+      html+=`<td class="col-price"><span class="text-xs text-gray-600">${pd}</span></td>`;
+      html+=`<td class="col-qty"><input type="number" min="0" step="1" value="" data-qty class="input input-bordered input-xs w-full bg-white text-right" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
+      if(showCut) html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
+      if(isAdhesive) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td class="text-xs text-gray-500" data-m2>0,000</td>`;
+      html+=`<td class="col-sub font-semibold text-sm" data-st>R$ 0,00</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+    grp.innerHTML=html;
+    div.appendChild(grp);
+  });
+  const ct=document.createElement("div");ct.className="bg-white border border-gray-200 rounded-lg p-4 flex justify-end items-center gap-4 shadow-sm";
+  ct.innerHTML=`<span class="text-sm text-gray-700">Total ${c.name}</span><span class="text-lg font-bold text-gray-900" data-ct>R$ 0,00</span>`;
+  div.appendChild(ct);
+  contentsEl.appendChild(div);
+});
 </script>
-
-<!-- ===== HTML ===== -->
-<div data-controller="calculator" class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
-  <!-- Hero Header -->
-  <div class="bg-gray-900 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div class="flex items-center gap-5">
-        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-xl flex items-center justify-center">
-          <i class="fas fa-print text-2xl text-white"></i>
-        </div>
-        <div>
-          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Calculadora Xerox do Victor</h1>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 pb-36">
-    <!-- Grand Total Card (top summary) -->
-    <div class="bg-white rounded-2xl shadow-xl border border-base-200 p-6 mb-8 flex items-center justify-between transition-all duration-300">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-gray-100 rounded-xl">
-          <i class="fas fa-coins text-2xl text-gray-600"></i>
-        </div>
-        <div>
-          <span class="text-lg font-medium text-base-content/70">Total Geral</span>
-          <p class="text-sm text-base-content/40">Todos os serviços</p>
-        </div>
-      </div>
-      <div class="text-3xl sm:text-4xl font-bold text-gray-900 transition-all duration-300" data-calculator-target="grandTotal">
-        R$ 0,00
-      </div>
-    </div>
-
-    <!-- Category Tabs -->
-    <div class="mb-6" role="tablist">
-      <div class="tabs tabs-boxed bg-white shadow-sm border border-base-200 p-1 gap-1" id="category-tabs">
-        <!-- Tabs injected by JS -->
-      </div>
-    </div>
-
-    <!-- Category Contents -->
-    <div id="category-contents">
-      <!-- Injected by JS -->
-    </div>
-
-    <!-- Custom Services Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-base-200 overflow-hidden mt-6">
-      <div class="px-6 py-4 bg-gradient-to-r from-base-100 to-base-50 border-b border-base-200 flex items-center gap-3">
-        <i class="fas fa-plus-circle text-lg text-gray-500"></i>
-        <h3 class="text-lg font-semibold text-base-content">Outros Serviços</h3>
-        <span class="text-sm text-base-content/40">Adicione serviços que não estão na tabela acima</span>
-      </div>
-
-      <div class="p-6">
-        <div id="custom-services-list" class="space-y-3 mb-4"></div>
-
-        <div class="flex items-end gap-3 p-4 bg-base-100 rounded-xl border border-dashed border-base-300">
-          <div class="flex-1">
-            <label class="label">
-              <span class="label-text text-sm font-medium text-base-content/60">Nome do serviço</span>
-            </label>
-            <input type="text"
-                   id="custom-service-name"
-                   placeholder="Ex: Laminação, Encadernação..."
-                   class="input input-bordered input-sm w-full transition-all duration-150 focus:input-primary" />
-          </div>
-          <div class="w-36">
-            <label class="label">
-              <span class="label-text text-sm font-medium text-base-content/60">Valor (R$)</span>
-            </label>
-            <input type="number"
-                   id="custom-service-price"
-                   min="0" step="0.50"
-                   placeholder="0,00"
-                   class="input input-bordered input-sm w-full text-right font-mono transition-all duration-150 focus:input-primary" />
-          </div>
-          <button class="btn btn-primary btn-sm gap-2"
-                  data-action="click->calculator#addCustomService">
-            <i class="fas fa-plus"></i>
-            Adicionar
-          </button>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-base-200 flex justify-end items-center gap-4">
-          <span class="text-sm font-medium text-base-content/60">Subtotal outros serviços</span>
-          <span class="text-xl font-bold text-gray-900" data-calculator-target="customServicesTotal">R$ 0,00</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Print Receipt Button -->
-    <div class="mt-6 flex justify-center">
-      <button class="btn btn-outline btn-lg gap-3 px-8 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
-              data-action="click->calculator#printReceipt">
-        <i class="fas fa-print text-lg"></i>
-        Imprimir Recibo
-      </button>
-    </div>
-  </div>
-
-  <!-- Sticky Bottom Grand Total Bar -->
-  <div class="sticky bottom-0 z-30 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <i class="fas fa-receipt text-2xl text-gray-400"></i>
-          <div>
-            <h2 class="text-xl font-bold text-white">Total Geral</h2>
-            <p class="text-gray-400 text-xs">Todos os serviços + taxas</p>
-          </div>
-        </div>
-        <span class="text-3xl sm:text-4xl font-bold text-white" data-calculator-target="grandTotal">R$ 0,00</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== STIMULUS CONTROLLER ===== -->
-<script>
-(function() {
-  const application = Stimulus.Application.start()
-
-  application.register("calculator", class extends Stimulus.Controller {
-    static targets = ["qty", "subtotal", "grandTotal", "tab", "categoryContent"]
-
-    connect() {
-      this.renderTabs()
-      this.renderCategories()
-      this.calculateAll()
-    }
-
-    // ── Render HTML from data ──
-
-    renderTabs() {
-      const container = document.getElementById("category-tabs")
-      container.innerHTML = CATEGORIES.map((cat, i) => `
-        <button class="tab tab-lg gap-2 flex-1 transition-all duration-200 ${i === 0 ? 'tab-active bg-gray-900 text-white hover:bg-gray-800' : 'hover:bg-gray-100'}"
-                data-calculator-target="tab"
-                data-action="click->calculator#switchCategory"
-                data-category-id="${cat.id}">
-          <i class="fas ${cat.icon}"></i>
-          <span class="hidden sm:inline">${cat.name}</span>
-        </button>
-      `).join("")
-    }
-
-    renderCategories() {
-      const container = document.getElementById("category-contents")
-      container.innerHTML = CATEGORIES.map((cat, i) => {
-        // Group items
-        const groups = {}
-        cat.items.forEach(item => {
-          if (!groups[item.group_name]) groups[item.group_name] = []
-          groups[item.group_name].push(item)
-        })
-
-        const groupHtml = Object.entries(groups).map(([groupName, items]) => {
-          const isCommonPaper = groupName.includes("Papel comum")
-          const isAdhesive = groupName.includes("Leitoso")
-
-          const rowsHtml = items.map(item => {
-            const rules = item.pricing_rules
-            const isItemAdhesive = rules.type === "adhesive"
-
-            let rateDisplay = ""
-            if (rules.type === "tiered") {
-              rateDisplay = rules.tiers.map((t, idx) => `R$ ${t.rate.toFixed(2)}${idx < rules.tiers.length - 1 ? " | " : ""}`).join("")
-            } else if (rules.type === "flat") {
-              rateDisplay = `R$ ${rules.rate.toFixed(2)}`
-            } else if (rules.type === "adhesive") {
-              rateDisplay = rules.tiers.map(t => `R$ ${t.rate.toFixed(2)}/m²`).join(" | ")
-            }
-
-            let typeLabel = ""
-            if (rules.type === "tiered") typeLabel = '<span class="text-xs text-base-content/40">por quantidade</span>'
-            else if (rules.type === "adhesive") typeLabel = '<span class="text-xs text-base-content/40">por m²</span>'
-
-            return `
-              <tr data-calculator-row
-                  data-pricing-rules='${JSON.stringify(rules)}'
-                  class="transition-all duration-150 hover:bg-base-200/50">
-                <td class="pl-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <span class="font-medium text-base-content">${item.name}</span>
-                  </div>
-                </td>
-                <td class="text-right py-4">
-                  <div class="flex flex-col items-end">
-                    ${typeLabel}
-                    <span class="font-mono text-xs text-gray-600" data-calculator-target="rateDisplay">${rateDisplay}</span>
-                  </div>
-                </td>
-                <td class="text-right py-4">
-                  <input type="number" min="0" step="1" value=""
-                    class="input input-bordered input-sm w-20 text-right font-mono transition-all duration-150 focus:input-primary"
-                    data-calculator-target="qty"
-                    data-action="input->calculator#calculate" />
-                </td>
-                ${!isCommonPaper ? `
-                <td class="text-center py-4">
-                  <input type="checkbox"
-                    class="toggle toggle-xs border-gray-300 bg-gray-200 [&:checked]:bg-gray-900 [&:checked]:border-gray-900"
-                    data-calculator-target="cut"
-                    data-action="change->calculator#calculate" />
-                </td>` : ""}
-                ${isItemAdhesive ? `
-                <td class="text-right py-4">
-                  <input type="number" min="0" step="0.01" value=""
-                    class="input input-bordered input-sm w-24 text-right font-mono transition-all duration-150 focus:input-primary"
-                    data-calculator-target="width" data-action="input->calculator#calculate" placeholder="0,00" />
-                </td>
-                <td class="text-right py-4">
-                  <input type="number" min="0" step="0.01" value=""
-                    class="input input-bordered input-sm w-24 text-right font-mono transition-all duration-150 focus:input-primary"
-                    data-calculator-target="height" data-action="input->calculator#calculate" placeholder="0,00" />
-                </td>
-                <td class="text-right py-4">
-                  <span class="font-mono text-sm text-base-content/60" data-calculator-target="m2">0,000</span>
-                </td>` : ""}
-                <td class="pr-6 py-4 text-right">
-                  <span class="font-mono font-semibold text-gray-900 text-lg" data-calculator-target="subtotal">R$ 0,00</span>
-                </td>
-              </tr>
-            `
-          }).join("")
-
-          return `
-            <div class="bg-white rounded-2xl shadow-sm border border-base-200 overflow-hidden transition-all duration-200 hover:shadow-md"
-                 data-calculator-group="${groupName.replace(/\s+/g, '-').toLowerCase()}">
-              <div class="px-6 py-4 bg-gradient-to-r from-base-100 to-base-50 border-b border-base-200 flex items-center gap-3">
-                <div class="w-1 h-8 rounded-full bg-gradient-to-b from-gray-500 to-gray-700"></div>
-                <h3 class="text-lg font-semibold text-base-content">${groupName}</h3>
-                <span class="ml-auto text-sm font-medium text-base-content/60">
-                  Subtotal: <span class="font-mono font-bold text-gray-900" data-calculator-target="groupTotal">R$ 0,00</span>
-                </span>
-              </div>
-              <div class="overflow-x-auto">
-                <table class="table table-zebra table-pin-rows">
-                  <thead>
-                    <tr class="text-sm uppercase tracking-wider text-base-content/50">
-                      <th class="py-4 pl-6">Item</th>
-                      <th class="py-4 text-right">Preço Unit.</th>
-                      <th class="py-4 text-right">Qtde.</th>
-                      ${!isCommonPaper ? '<th class="py-4 text-center">Corte?</th>' : ''}
-                      ${isAdhesive ? '<th class="py-4 text-right">Largura (m)</th><th class="py-4 text-right">Altura (m)</th><th class="py-4 text-right">m²</th>' : ''}
-                      <th class="py-4 pr-6 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${rowsHtml}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          `
-        }).join("")
-
-        return `
-          <div id="category_${cat.id}"
-               data-calculator-target="categoryContent"
-               data-calculator-category="${cat.id}"
-               class="${i === 0 ? '' : 'hidden'} space-y-6">
-            ${groupHtml}
-            <div class="bg-white rounded-2xl shadow-sm border border-base-200 p-6 flex justify-end items-center gap-6">
-              <span class="text-xl font-medium text-base-content/70">Total ${cat.name}</span>
-              <span class="text-2xl font-bold text-gray-900" data-calculator-target="categoryTotal">R$ 0,00</span>
-            </div>
-          </div>
-        `
-      }).join("")
-    }
-
-    // ── Pricing calculation ──
-
-    calculate(event) {
-      const row = event.target.closest("[data-calculator-row]")
-      if (!row) return
-
-      const rules = JSON.parse(row.dataset.pricingRules)
-      const qty = parseFloat(row.querySelector("[data-calculator-target='qty']")?.value) || 0
-
-      let subtotal = 0
-      let displayPrice = ""
-
-      if (rules.type === "flat") {
-        subtotal = qty * rules.rate
-        displayPrice = `R$ ${rules.rate.toFixed(2)}`
-      } else if (rules.type === "tiered") {
-        const rate = this.findTieredRate(qty, rules.tiers)
-        subtotal = qty * rate
-        displayPrice = `R$ ${rate.toFixed(2)}`
-      } else if (rules.type === "adhesive") {
-        const width = parseFloat(row.querySelector("[data-calculator-target='width']")?.value) || 0
-        const height = parseFloat(row.querySelector("[data-calculator-target='height']")?.value) || 0
-        const bleed = rules.bleed || 0
-
-        if (width > 0 && height > 0) {
-          const effectiveWidth = width + bleed
-          const effectiveHeight = height + bleed
-          const m2 = effectiveWidth * effectiveHeight * qty
-          const rate = this.findAdhesiveRate(m2, rules.tiers)
-          const rawTotal = m2 * rate
-          subtotal = Math.max(rawTotal, rules.min_charge || 0)
-          const m2Field = row.querySelector("[data-calculator-target='m2']")
-          if (m2Field) m2Field.textContent = m2.toFixed(3)
-        }
-        displayPrice = rules.tiers.map(t => `R$ ${t.rate.toFixed(2)}/m²`).join(" | ")
-      }
-
-      // Add R$ 1,00 per unit for cutting service
-      const cutCheckbox = row.querySelector("[data-calculator-target='cut']")
-      if (cutCheckbox && cutCheckbox.checked && qty > 0) {
-        subtotal += qty * 1.00
-      }
-
-      const subtotalTarget = row.querySelector("[data-calculator-target='subtotal']")
-      if (subtotalTarget) subtotalTarget.textContent = this.formatCurrency(subtotal)
-
-      const rateDisplay = row.querySelector("[data-calculator-target='rateDisplay']")
-      if (rateDisplay) rateDisplay.textContent = displayPrice
-
-      this.calculateAll()
-    }
-
-    findTieredRate(qty, tiers) {
-      for (const tier of tiers) {
-        if (qty >= tier.min_qty) return tier.rate
-      }
-      return tiers[tiers.length - 1]?.rate || 0
-    }
-
-    findAdhesiveRate(m2, tiers) {
-      for (const tier of tiers) {
-        if (m2 >= tier.min_m2) return tier.rate
-      }
-      return tiers[tiers.length - 1]?.rate || 0
-    }
-
-    calculateAll() {
-      let total = 0
-      this.subtotalTargets.forEach(el => { total += this.parseCurrency(el.textContent) })
-
-      // Add custom services
-      document.querySelectorAll("#custom-services-list .custom-service-price").forEach(el => {
-        total += this.parseCurrency(el.textContent)
-      })
-
-      if (this.hasGrandTotalTarget) {
-        this.grandTotalTargets.forEach(target => {
-          target.textContent = this.formatCurrency(total)
-        })
-      }
-
-      // Per-group subtotals
-      document.querySelectorAll("[data-calculator-group]").forEach(group => {
-        let groupTotal = 0
-        group.querySelectorAll("[data-calculator-target='subtotal']").forEach(el => {
-          groupTotal += this.parseCurrency(el.textContent)
-        })
-        const groupTotalEl = group.querySelector("[data-calculator-target='groupTotal']")
-        if (groupTotalEl) groupTotalEl.textContent = this.formatCurrency(groupTotal)
-      })
-
-      // Per-category subtotals
-      document.querySelectorAll("[data-calculator-category]").forEach(cat => {
-        let catTotal = 0
-        cat.querySelectorAll("[data-calculator-target='subtotal']").forEach(el => {
-          catTotal += this.parseCurrency(el.textContent)
-        })
-        const catTotalEl = cat.querySelector("[data-calculator-target='categoryTotal']")
-        if (catTotalEl) catTotalEl.textContent = this.formatCurrency(catTotal)
-      })
-
-      // Custom services total
-      let customTotal = 0
-      document.querySelectorAll("#custom-services-list .custom-service-price").forEach(el => {
-        customTotal += this.parseCurrency(el.textContent)
-      })
-      const customTotalEl = document.querySelector("[data-calculator-target='customServicesTotal']")
-      if (customTotalEl) customTotalEl.textContent = this.formatCurrency(customTotal)
-    }
-
-    formatCurrency(value) {
-      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
-    }
-
-    parseCurrency(value) {
-      if (!value) return 0
-      const cleaned = value.replace(/[R$\s]/g, "").replace(/\./g, "").replace(",", ".")
-      return parseFloat(cleaned) || 0
-    }
-
-    // ── Custom Services ──
-
-    addCustomService(event) {
-      event.preventDefault()
-      const nameInput = document.getElementById("custom-service-name")
-      const priceInput = document.getElementById("custom-service-price")
-      const name = nameInput?.value?.trim()
-      const price = parseFloat(priceInput?.value) || 0
-
-      if (!name) {
-        nameInput?.focus(); nameInput?.classList.add("input-error")
-        setTimeout(() => nameInput?.classList.remove("input-error"), 1000)
-        return
-      }
-      if (price <= 0) {
-        priceInput?.focus(); priceInput?.classList.add("input-error")
-        setTimeout(() => priceInput?.classList.remove("input-error"), 1000)
-        return
-      }
-
-      const list = document.getElementById("custom-services-list")
-      if (!list) return
-
-      const rowId = `custom-service-${Date.now()}`
-      const row = document.createElement("div")
-      row.id = rowId
-      row.className = "flex items-center justify-between p-3 bg-white rounded-xl border border-base-200 transition-all duration-200 hover:shadow-sm"
-      row.innerHTML = `
-        <div class="flex items-center gap-3 min-w-0 flex-1">
-          <i class="fas fa-cog text-gray-400"></i>
-          <span class="font-medium text-base-content truncate">${this.escapeHtml(name)}</span>
-        </div>
-        <div class="flex items-center gap-4">
-          <span class="font-mono font-semibold text-lg text-gray-900 custom-service-price">${this.formatCurrency(price)}</span>
-          <button class="btn btn-ghost btn-xs btn-square text-gray-400 hover:text-red-500 transition-colors"
-                  data-action="click->calculator#removeCustomService"
-                  data-service-row="${rowId}">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      `
-      list.appendChild(row)
-      nameInput.value = ""
-      priceInput.value = ""
-      this.calculateAll()
-      nameInput.focus()
-    }
-
-    removeCustomService(event) {
-      const button = event.currentTarget
-      const rowId = button.dataset.serviceRow
-      const row = document.getElementById(rowId)
-      if (row) {
-        row.style.transition = "all 0.2s ease-out"
-        row.style.opacity = "0"
-        row.style.transform = "translateX(20px)"
-        setTimeout(() => { row.remove(); this.calculateAll() }, 200)
-      }
-    }
-
-    escapeHtml(str) {
-      const div = document.createElement("div")
-      div.textContent = str
-      return div.innerHTML
-    }
-
-    // ── Print Receipt ──
-
-    printReceipt() {
-      const receiptData = this.collectReceiptData()
-      const printWindow = window.open("", "_blank", "width=800,height=600")
-
-      let html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Recibo - Calculadora Xerox do Victor</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<style>
-  @page { margin: 15mm; }
-  * { box-sizing: border-box; }
-  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937; background: #fff; padding: 0; margin: 0; }
-  .receipt { max-width: 700px; margin: 0 auto; padding: 32px 24px; }
-  .header { text-align: center; border-bottom: 2px solid #1f2937; padding-bottom: 20px; margin-bottom: 24px; }
-  .header h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.05em; }
-  .header p { color: #6b7280; font-size: 14px; margin: 0; }
-  .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; margin: 20px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 6px 4px; font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; }
-  th:last-child, td:last-child { text-align: right; }
-  td { padding: 5px 4px; border-bottom: 1px solid #f3f4f6; }
-  .font-mono { font-family: 'Courier New', monospace; }
-  .total-row td { font-weight: 700; border-top: 2px solid #1f2937; border-bottom: none; padding-top: 10px; font-size: 15px; }
-  .grand-total td { font-size: 18px; border-top: 3px double #1f2937; padding-top: 10px; }
-  .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-</style></head><body>
-<div class="receipt">
-  <div class="header">
-    <h1>Calculadora Xerox do Victor</h1>
-    <p>Recibo de Orçamento</p>
-  </div>`
-
-      receiptData.categories.forEach(cat => {
-        if (cat.items.length === 0) return
-        html += `<div class="section-title">${cat.name}</div>
-<table><thead><tr><th>Item</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>`
-        cat.items.forEach(item => {
-          html += `<tr><td>${item.name}</td><td>${item.qty}</td><td class="font-mono">${item.unitPrice}</td><td class="font-mono">${item.subtotal}</td></tr>`
-        })
-        html += `</tbody></table>`
-      })
-
-      if (receiptData.customServices.length > 0) {
-        html += `<div class="section-title">Outros Serviços</div>
-<table><thead><tr><th>Serviço</th><th colspan="2"></th><th>Valor</th></tr></thead><tbody>`
-        receiptData.customServices.forEach(svc => {
-          html += `<tr><td>${svc.name}</td><td colspan="2"></td><td class="font-mono">${svc.price}</td></tr>`
-        })
-        html += `</tbody></table>`
-      }
-
-      html += `
-<table><tfoot>
-  <tr class="total-row grand-total"><td colspan="3">TOTAL GERAL</td><td class="font-mono">${this.formatCurrency(receiptData.total)}</td></tr>
-</tfoot></table>
-<div class="footer">
-  <p>Gerado em ${new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
-  <p>Calculadora Xerox do Victor &mdash; Obrigado pela preferência!</p>
-</div>
-</div>
-<script>window.onload = function() { window.print(); }<\/script>
-</body></html>`
-
-      printWindow.document.write(html)
-      printWindow.document.close()
-    }
-
-    collectReceiptData() {
-      const categories = []
-      document.querySelectorAll("[data-calculator-category]").forEach(catEl => {
-        const tabButton = document.querySelector(`[data-category-id="${catEl.dataset.calculatorCategory}"]`)
-        const catName = tabButton?.textContent?.trim() || "Categoria"
-        const items = []
-
-        catEl.querySelectorAll("[data-calculator-row]").forEach(row => {
-          const qty = parseFloat(row.querySelector("[data-calculator-target='qty']")?.value) || 0
-          if (qty <= 0) return
-          const name = row.querySelector(".font-medium")?.textContent?.trim() || "Item"
-          const subtotal = row.querySelector("[data-calculator-target='subtotal']")?.textContent || "R$ 0,00"
-          const rateDisplay = row.querySelector("[data-calculator-target='rateDisplay']")?.textContent || ""
-          items.push({ name, qty, unitPrice: rateDisplay, subtotal })
-        })
-
-        if (items.length > 0) categories.push({ name: catName, items })
-      })
-
-      const customServices = []
-      document.querySelectorAll("#custom-services-list > div").forEach(row => {
-        const nameEl = row.querySelector(".font-medium")
-        const priceEl = row.querySelector(".custom-service-price")
-        if (nameEl && priceEl) customServices.push({ name: nameEl.textContent.trim(), price: priceEl.textContent.trim() })
-      })
-
-      return { categories, customServices, total: this.parseCurrency(this.grandTotalTargets[0]?.textContent || "R$ 0,00") }
-    }
-
-    // ── Tab switching ──
-
-    switchCategory(event) {
-      event.preventDefault()
-      const tab = event.currentTarget
-      const categoryId = tab.dataset.categoryId
-
-      document.querySelectorAll("[data-calculator-target='tab']").forEach(t => {
-        t.classList.remove("tab-active", "bg-gray-900", "text-white", "hover:bg-gray-800")
-        t.classList.add("hover:bg-gray-100")
-      })
-      tab.classList.add("tab-active", "bg-gray-900", "text-white", "hover:bg-gray-800")
-      tab.classList.remove("hover:bg-gray-100")
-
-      document.querySelectorAll("[data-calculator-target='categoryContent']").forEach(el => {
-        el.classList.add("hidden")
-      })
-      const target = document.getElementById(`category_${categoryId}`)
-      if (target) target.classList.remove("hidden")
-    }
-  })
-})()
-</script>
-
 </body>
 </html>
