@@ -1,576 +1,766 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calculadora Xerox do Victor</title>
-  <!-- Tailwind CSS v3 -->
+
+  <!-- Tailwind CSS v3 + DaisyUI v4 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- DaisyUI v4 -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'llama-purple': '#374151',
+            'llama-blue': '#489DF9',
+            'llama-dark': '#1f2937',
+          }
+        }
+      }
+    }
+  </script>
+
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .input:focus { transform: scale(1.02); }
-    .tab-active { transform: scale(1.02); }
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
-    .input-error { border-color: #ef4444 !important; }
-    .slide-up { animation: slideUp 0.2s ease-out; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
 </head>
 <body>
 
-<div id="app">
-  <!-- Hero Header -->
-  <div class="bg-gray-900 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div class="flex items-center gap-5">
-        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-xl flex items-center justify-center">
-          <i class="fas fa-print text-2xl text-white"></i>
-        </div>
-        <div>
-          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Calculadora Xerox do Victor</h1>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 pb-36 fade-in">
-    <!-- Grand Total Card (top summary) -->
-    <div class="bg-white rounded-2xl shadow-xl border border-base-200 p-6 mb-8 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-gray-100 rounded-xl">
-          <i class="fas fa-coins text-2xl text-gray-600"></i>
-        </div>
-        <div>
-          <span class="text-lg font-medium text-gray-500">Total Geral</span>
-          <p class="text-sm text-gray-400">Todos os serviços</p>
-        </div>
-      </div>
-      <div class="text-3xl sm:text-4xl font-bold text-gray-900 grand-total">R$ 0,00</div>
-    </div>
-
-    <!-- Category Tabs -->
-    <div class="mb-6" role="tablist">
-      <div class="tabs tabs-boxed bg-white shadow-sm border border-base-200 p-1 gap-1" id="category-tabs"></div>
-    </div>
-
-    <!-- Category Contents -->
-    <div id="category-contents"></div>
-
-    <!-- Custom Services Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-base-200 overflow-hidden mt-6">
-      <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-base-200 flex items-center gap-3">
-        <i class="fas fa-plus-circle text-lg text-gray-500"></i>
-        <h3 class="text-lg font-semibold text-gray-800">Outros Serviços</h3>
-        <span class="text-sm text-gray-400">Adicione serviços que não estão na tabela acima</span>
-      </div>
-
-      <div class="p-6">
-        <div id="custom-services-list" class="space-y-3 mb-4"></div>
-
-        <div class="flex items-end gap-3 p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-          <div class="flex-1">
-            <label class="text-sm font-medium text-gray-500 block mb-1">Nome do serviço</label>
-            <input type="text" id="custom-service-name"
-                   placeholder="Ex: Laminação, Encadernação..."
-                   class="input input-bordered input-sm w-full" />
-          </div>
-          <div class="w-36">
-            <label class="text-sm font-medium text-gray-500 block mb-1">Valor (R$)</label>
-            <input type="number" id="custom-service-price" min="0" step="0.50" placeholder="0,00"
-                   class="input input-bordered input-sm w-full text-right font-mono" />
-          </div>
-          <button class="btn btn-primary btn-sm gap-2" onclick="Calc.addCustomService()">
-            <i class="fas fa-plus"></i> Adicionar
-          </button>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-gray-200 flex justify-end items-center gap-4">
-          <span class="text-sm font-medium text-gray-500">Subtotal outros serviços</span>
-          <span class="text-xl font-bold text-gray-900" id="custom-services-total">R$ 0,00</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Print Receipt Button -->
-    <div class="mt-6 flex justify-center">
-      <button class="btn btn-outline btn-lg gap-3 px-8" onclick="Calc.printReceipt()">
-        <i class="fas fa-print text-lg"></i> Imprimir Recibo
-      </button>
-    </div>
-  </div>
-
-  <!-- Sticky Bottom Grand Total Bar -->
-  <div class="sticky bottom-0 z-30 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <i class="fas fa-receipt text-2xl text-gray-400"></i>
-          <div>
-            <h2 class="text-xl font-bold text-white">Total Geral</h2>
-            <p class="text-gray-400 text-xs">Todos os serviços + taxas</p>
-          </div>
-        </div>
-        <span class="text-3xl sm:text-4xl font-bold text-white grand-total">R$ 0,00</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ── DATA ──
-const DATA = {
-  categories: [
-    { id: 1, name: "Color", icon: "fa-palette",
-      items: [
-        { group: "Papel comum", name: "A4", rules: {"type":"tiered","tiers":[{"rate":1.2,"min_qty":111},{"rate":2,"min_qty":51},{"rate":2.5,"min_qty":31},{"rate":3,"min_qty":16},{"rate":3.5,"min_qty":0}]} },
-        { group: "Papel comum", name: "A3", rules: {"type":"tiered","tiers":[{"rate":3.5,"min_qty":101},{"rate":4.5,"min_qty":51},{"rate":5.5,"min_qty":21},{"rate":6,"min_qty":11},{"rate":7,"min_qty":0}]} },
-        { group: "Papel comum", name: "A2 traço", rules: {"rate":10.45,"type":"flat"} },
-        { group: "Papel comum", name: "A2 imagem", rules: {"rate":26.65,"type":"flat"} },
-        { group: "Papel comum", name: "A1 traço", rules: {"rate":11.55,"type":"flat"} },
-        { group: "Papel comum", name: "A1 imagem", rules: {"rate":39.9,"type":"flat"} },
-        { group: "Papel comum", name: "A0 traço", rules: {"rate":22.55,"type":"flat"} },
-        { group: "Papel comum", name: "A0 imagem", rules: {"rate":79.85,"type":"flat"} },
-        { group: "Cartão / Couchê 180/170g", name: "A4", rules: {"type":"tiered","tiers":[{"rate":2.5,"min_qty":101},{"rate":3,"min_qty":51},{"rate":3.5,"min_qty":31},{"rate":5,"min_qty":0}]} },
-        { group: "Cartão / Couchê 180/170g", name: "A3", rules: {"type":"tiered","tiers":[{"rate":6.5,"min_qty":101},{"rate":7,"min_qty":51},{"rate":8,"min_qty":21},{"rate":12,"min_qty":0}]} },
-        { group: "Cartão / Couchê 250g", name: "A4", rules: {"type":"tiered","tiers":[{"rate":3,"min_qty":101},{"rate":3.5,"min_qty":51},{"rate":4.5,"min_qty":31},{"rate":5.5,"min_qty":16},{"rate":6,"min_qty":0}]} },
-        { group: "Cartão / Couchê 250g", name: "A3", rules: {"type":"tiered","tiers":[{"rate":6,"min_qty":101},{"rate":7,"min_qty":51},{"rate":9,"min_qty":21},{"rate":13,"min_qty":0}]} },
-        { group: "Adesivo", name: "A4", rules: {"type":"tiered","tiers":[{"rate":5.5,"min_qty":11},{"rate":6.5,"min_qty":0}]} },
-        { group: "Adesivo", name: "A3", rules: {"type":"tiered","tiers":[{"rate":9,"min_qty":21},{"rate":10,"min_qty":11},{"rate":12,"min_qty":0}]} },
-        { group: "Vegetal", name: "A4", rules: {"rate":7,"type":"flat"} },
-        { group: "Vegetal", name: "A3", rules: {"type":"tiered","tiers":[{"rate":8,"min_qty":12},{"rate":10,"min_qty":0}]} }
-      ]
-    },
-    { id: 2, name: "P/B", icon: "fa-file-lines",
-      items: [
-        { group: "Papel comum", name: "A4", rules: {"type":"tiered","tiers":[{"rate":0.2,"min_qty":751},{"rate":0.25,"min_qty":501},{"rate":0.35,"min_qty":251},{"rate":0.4,"min_qty":101},{"rate":0.5,"min_qty":4},{"rate":1,"min_qty":0}]} },
-        { group: "Papel comum", name: "A3", rules: {"rate":2,"type":"flat"} },
-        { group: "Papel comum", name: "A2 traço", rules: {"rate":7.15,"type":"flat"} },
-        { group: "Papel comum", name: "A2 imagem", rules: {"rate":21.25,"type":"flat"} },
-        { group: "Papel comum", name: "A1 traço", rules: {"rate":10.15,"type":"flat"} },
-        { group: "Papel comum", name: "A1 imagem", rules: {"rate":32.45,"type":"flat"} },
-        { group: "Papel comum", name: "A0 traço", rules: {"rate":18.6,"type":"flat"} },
-        { group: "Papel comum", name: "A0 imagem", rules: {"rate":63.5,"type":"flat"} }
-      ]
-    },
-    { id: 3, name: "Adesivos", icon: "fa-tag",
-      items: [
-        { group: "Leitoso corte simples", name: "Até 1 m²", rules: {"type":"adhesive","bleed":0.002,"tiers":[{"rate":50,"min_m2":4.01},{"rate":55,"min_m2":1.01},{"rate":60,"min_m2":0}],"min_charge":30} },
-        { group: "Leitoso corte contorno", name: "Até 1 m²", rules: {"type":"adhesive","bleed":0.002,"tiers":[{"rate":55,"min_m2":4.01},{"rate":65,"min_m2":2.01},{"rate":80,"min_m2":1.01},{"rate":120,"min_m2":0}],"min_charge":45} }
-      ]
-    }
-  ]
-};
-
-// ── CALCULATOR ──
-const Calc = {
-  init() {
-    this.renderTabs()
-    this.renderCategories()
-    this.recalc()
-  },
-
-  // ── RENDER ──
-
-  renderTabs() {
-    const el = document.getElementById("category-tabs")
-    el.innerHTML = DATA.categories.map((cat, i) =>
-      `<button class="tab tab-lg gap-2 flex-1 ${i === 0 ? 'tab-active bg-gray-900 text-white' : 'hover:bg-gray-100'}"
-               onclick="Calc.switchTab(${cat.id})">
-        <i class="fas ${cat.icon}"></i>
-        <span class="hidden sm:inline">${cat.name}</span>
-      </button>`
-    ).join("")
-  },
-
-  renderCategories() {
-    const container = document.getElementById("category-contents")
-    container.innerHTML = DATA.categories.map((cat, i) => {
-      // Group items
-      const groups = {}
-      cat.items.forEach(item => {
-        if (!groups[item.group]) groups[item.group] = []
-        groups[item.group].push(item)
-      })
-
-      const groupHtml = Object.entries(groups).map(([groupName, items]) => {
-        const isCommonPaper = groupName.includes("Papel comum")
-        const isAdh = groupName.includes("Leitoso")
-
-        const rowsHtml = items.map(item => {
-          const r = item.rules
-          const isItemAdh = r.type === "adhesive"
-
-          let rateDisp = ""
-          let typeLabel = ""
-          if (r.type === "tiered") {
-            rateDisp = r.tiers.map((t, idx) => `R$ ${t.rate.toFixed(2)}${idx < r.tiers.length - 1 ? " | " : ""}`).join("")
-            typeLabel = '<span class="text-xs text-gray-400">por quantidade</span>'
-          } else if (r.type === "flat") {
-            rateDisp = `R$ ${r.rate.toFixed(2)}`
-          } else if (r.type === "adhesive") {
-            rateDisp = r.tiers.map(t => `R$ ${t.rate.toFixed(2)}/m²`).join(" | ")
-            typeLabel = '<span class="text-xs text-gray-400">por m²</span>'
+  <!-- ─── DATA ─── -->
+  <script>
+    const CATEGORIES = [
+      {
+        id: 1,
+        name: "Color",
+        icon: "fa-palette",
+        groups: [
+          {
+            name: "Papel comum",
+            hasCut: false,
+            items: [
+              { name: "A4",   pricingRules: { type: "tiered", tiers: [{ min_qty: 111, rate: 1.2 }, { min_qty: 51, rate: 2 }, { min_qty: 31, rate: 2.5 }, { min_qty: 16, rate: 3 }, { min_qty: 0, rate: 3.5 }] } },
+              { name: "A3",   pricingRules: { type: "tiered", tiers: [{ min_qty: 101, rate: 3.5 }, { min_qty: 51, rate: 4.5 }, { min_qty: 21, rate: 5.5 }, { min_qty: 11, rate: 6 }, { min_qty: 0, rate: 7 }] } },
+              { name: "A2 traço",   pricingRules: { type: "flat", rate: 10.45 } },
+              { name: "A2 imagem",   pricingRules: { type: "flat", rate: 26.65 } },
+              { name: "A1 traço",   pricingRules: { type: "flat", rate: 11.55 } },
+              { name: "A1 imagem",   pricingRules: { type: "flat", rate: 39.9 } },
+              { name: "A0 traço",   pricingRules: { type: "flat", rate: 22.55 } },
+              { name: "A0 imagem",   pricingRules: { type: "flat", rate: 79.85 } },
+            ]
+          },
+          {
+            name: "Cartão / Couchê 180/170g",
+            hasCut: true,
+            items: [
+              { name: "A4", pricingRules: { type: "tiered", tiers: [{ min_qty: 101, rate: 2.5 }, { min_qty: 51, rate: 3 }, { min_qty: 31, rate: 3.5 }, { min_qty: 0, rate: 5 }] } },
+              { name: "A3", pricingRules: { type: "tiered", tiers: [{ min_qty: 101, rate: 6.5 }, { min_qty: 51, rate: 7 }, { min_qty: 21, rate: 8 }, { min_qty: 0, rate: 12 }] } },
+            ]
+          },
+          {
+            name: "Cartão / Couchê 250g",
+            hasCut: true,
+            items: [
+              { name: "A4", pricingRules: { type: "tiered", tiers: [{ min_qty: 101, rate: 3 }, { min_qty: 51, rate: 3.5 }, { min_qty: 31, rate: 4.5 }, { min_qty: 16, rate: 5.5 }, { min_qty: 0, rate: 6 }] } },
+              { name: "A3", pricingRules: { type: "tiered", tiers: [{ min_qty: 101, rate: 6.5 }, { min_qty: 51, rate: 7 }, { min_qty: 21, rate: 8 }, { min_qty: 0, rate: 12 }] } },
+            ]
+          },
+          {
+            name: "Adesivo",
+            hasCut: true,
+            items: [
+              { name: "A4", pricingRules: { type: "tiered", tiers: [{ min_qty: 11, rate: 5.5 }, { min_qty: 0, rate: 6.5 }] } },
+              { name: "A3", pricingRules: { type: "tiered", tiers: [{ min_qty: 21, rate: 9 }, { min_qty: 11, rate: 10 }, { min_qty: 0, rate: 12 }] } },
+            ]
+          },
+          {
+            name: "Vegetal",
+            hasCut: true,
+            items: [
+              { name: "A4", pricingRules: { type: "flat", rate: 7 } },
+              { name: "A3", pricingRules: { type: "tiered", tiers: [{ min_qty: 12, rate: 8 }, { min_qty: 0, rate: 10 }] } },
+            ]
+          },
+        ]
+      },
+      {
+        id: 2,
+        name: "P/B",
+        icon: "fa-file-lines",
+        groups: [
+          {
+            name: "Papel comum",
+            hasCut: false,
+            items: [
+              { name: "A4",   pricingRules: { type: "tiered", tiers: [{ min_qty: 751, rate: 0.2 }, { min_qty: 501, rate: 0.25 }, { min_qty: 251, rate: 0.35 }, { min_qty: 101, rate: 0.4 }, { min_qty: 4, rate: 0.5 }, { min_qty: 0, rate: 1 }] } },
+              { name: "A3",   pricingRules: { type: "flat", rate: 2 } },
+              { name: "A2 traço",   pricingRules: { type: "flat", rate: 7.15 } },
+              { name: "A2 imagem",   pricingRules: { type: "flat", rate: 21.25 } },
+              { name: "A1 traço",   pricingRules: { type: "flat", rate: 10.15 } },
+              { name: "A1 imagem",   pricingRules: { type: "flat", rate: 32.45 } },
+              { name: "A0 traço",   pricingRules: { type: "flat", rate: 18.6 } },
+              { name: "A0 imagem",   pricingRules: { type: "flat", rate: 63.5 } },
+            ]
           }
+        ]
+      },
+      {
+        id: 3,
+        name: "Adesivos",
+        icon: "fa-tag",
+        groups: [
+          {
+            name: "Leitoso corte simples",
+            hasCut: true,
+            items: [
+              { name: "Até 1 m²", pricingRules: { type: "adhesive", bleed: 0.002, tiers: [{ min_m2: 4.01, rate: 50 }, { min_m2: 1.01, rate: 55 }, { min_m2: 0, rate: 60 }], min_charge: 30 } },
+            ]
+          },
+          {
+            name: "Leitoso corte contorno",
+            hasCut: true,
+            items: [
+              { name: "Até 1 m²", pricingRules: { type: "adhesive", bleed: 0.002, tiers: [{ min_m2: 4.01, rate: 55 }, { min_m2: 2.01, rate: 65 }, { min_m2: 1.01, rate: 80 }, { min_m2: 0, rate: 120 }], min_charge: 45 } },
+            ]
+          },
+        ]
+      },
+    ]
+  </script>
 
-          const dataRules = this.htmlEncode(JSON.stringify(r))
-
-          return `<tr data-rules='${dataRules}' class="hover:bg-gray-50 transition-colors">
-            <td class="pl-6 py-4"><span class="font-medium text-gray-800">${item.name}</span></td>
-            <td class="text-right py-4">
-              <div class="flex flex-col items-end">
-                ${typeLabel}
-                <span class="font-mono text-xs text-gray-600 rate-display">${rateDisp}</span>
-              </div>
-            </td>
-            <td class="text-right py-4">
-              <input type="number" min="0" step="1" value=""
-                class="input input-bordered input-sm w-20 text-right font-mono qty-input"
-                oninput="Calc.calculateRow(this)" />
-            </td>
-            ${!isCommonPaper ? `
-            <td class="text-center py-4">
-              <input type="checkbox"
-                class="toggle toggle-xs border-gray-300 bg-gray-200"
-                onchange="Calc.calculateRow(this)" />
-            </td>` : ""}
-            ${isItemAdh ? `
-            <td class="text-right py-4">
-              <input type="number" min="0" step="0.01" value=""
-                class="input input-bordered input-sm w-24 text-right font-mono width-input"
-                oninput="Calc.calculateRow(this)" placeholder="0,00" />
-            </td>
-            <td class="text-right py-4">
-              <input type="number" min="0" step="0.01" value=""
-                class="input input-bordered input-sm w-24 text-right font-mono height-input"
-                oninput="Calc.calculateRow(this)" placeholder="0,00" />
-            </td>
-            <td class="text-right py-4">
-              <span class="font-mono text-sm text-gray-500 m2-display">0,000</span>
-            </td>` : ""}
-            <td class="pr-6 py-4 text-right">
-              <span class="font-mono font-semibold text-gray-900 text-lg subtotal-display">R$ 0,00</span>
-            </td>
-          </tr>`
-        }).join("")
-
-        return `<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-          <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 flex items-center gap-3">
-            <div class="w-1 h-8 rounded-full bg-gradient-to-b from-gray-500 to-gray-700"></div>
-            <h3 class="text-lg font-semibold text-gray-800">${groupName}</h3>
-            <span class="ml-auto text-sm font-medium text-gray-500">
-              Subtotal: <span class="font-mono font-bold text-gray-900 group-total">R$ 0,00</span>
-            </span>
+  <!-- ─── HTML ─── -->
+  <div id="app" class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
+    <!-- Hero Header -->
+    <div class="bg-gray-900 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div class="flex items-center gap-5">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-xl flex items-center justify-center">
+            <i class="fas fa-print text-2xl sm:text-3xl text-white"></i>
           </div>
-          <div class="overflow-x-auto">
-            <table class="table table-zebra table-pin-rows">
-              <thead>
-                <tr class="text-sm uppercase tracking-wider text-gray-500">
-                  <th class="py-4 pl-6">Item</th>
-                  <th class="py-4 text-right">Preço Unit.</th>
-                  <th class="py-4 text-right">Qtde.</th>
-                  ${!isCommonPaper ? '<th class="py-4 text-center">Corte?</th>' : ''}
-                  ${isAdh ? '<th class="py-4 text-right">Largura (m)</th><th class="py-4 text-right">Altura (m)</th><th class="py-4 text-right">m²</th>' : ''}
-                  <th class="py-4 pr-6 text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
+          <div>
+            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Calculadora Xerox do Victor</h1>
           </div>
-        </div>`
-      }).join("")
-
-      return `<div class="cat-content ${i === 0 ? '' : 'hidden'}" data-cat="${cat.id}">
-        ${groupHtml}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex justify-end items-center gap-6">
-          <span class="text-xl font-medium text-gray-500">Total ${cat.name}</span>
-          <span class="text-2xl font-bold text-gray-900 cat-total">R$ 0,00</span>
         </div>
-      </div>`
-    }).join("")
-  },
-
-  htmlEncode(str) {
-    return str.replace(/'/g, "&#39;").replace(/"/g, "&quot;")
-  },
-
-  // ── TAB SWITCHING ──
-
-  switchTab(id) {
-    document.querySelectorAll("#category-tabs .tab").forEach(t => {
-      t.classList.remove("tab-active", "bg-gray-900", "text-white")
-      t.classList.add("hover:bg-gray-100")
-    })
-    event.target.classList.add("tab-active", "bg-gray-900", "text-white")
-    event.target.classList.remove("hover:bg-gray-100")
-
-    document.querySelectorAll(".cat-content").forEach(el => el.classList.add("hidden"))
-    const target = document.querySelector(`.cat-content[data-cat="${id}"]`)
-    if (target) target.classList.remove("hidden")
-  },
-
-  // ── CALCULATION ──
-
-  calculateRow(input) {
-    const row = input.closest("tr")
-    if (!row) return
-
-    const rules = JSON.parse(row.dataset.rules)
-    const qty = parseFloat(row.querySelector(".qty-input")?.value) || 0
-
-    let subtotal = 0
-    let displayPrice = ""
-
-    if (rules.type === "flat") {
-      subtotal = qty * rules.rate
-      displayPrice = `R$ ${rules.rate.toFixed(2)}`
-    } else if (rules.type === "tiered") {
-      const rate = this.findTieredRate(qty, rules.tiers)
-      subtotal = qty * rate
-      displayPrice = `R$ ${rate.toFixed(2)}`
-    } else if (rules.type === "adhesive") {
-      const width = parseFloat(row.querySelector(".width-input")?.value) || 0
-      const height = parseFloat(row.querySelector(".height-input")?.value) || 0
-      const bleed = rules.bleed || 0
-
-      if (width > 0 && height > 0) {
-        const m2 = (width + bleed) * (height + bleed) * qty
-        const rate = this.findAdhesiveRate(m2, rules.tiers)
-        subtotal = Math.max(m2 * rate, rules.min_charge || 0)
-        const m2El = row.querySelector(".m2-display")
-        if (m2El) m2El.textContent = m2.toFixed(3)
-      }
-      displayPrice = rules.tiers.map(t => `R$ ${t.rate.toFixed(2)}/m²`).join(" | ")
-    }
-
-    // Cutting surcharge
-    const cutCb = row.querySelector(".toggle")
-    if (cutCb && cutCb.checked && qty > 0) subtotal += qty * 1.00
-
-    const subEl = row.querySelector(".subtotal-display")
-    if (subEl) subEl.textContent = this.fmt(subtotal)
-
-    const rdEl = row.querySelector(".rate-display")
-    if (rdEl) rdEl.textContent = displayPrice
-
-    this.recalc()
-  },
-
-  findTieredRate(qty, tiers) {
-    for (const t of tiers) { if (qty >= t.min_qty) return t.rate }
-    return tiers[tiers.length - 1]?.rate || 0
-  },
-
-  findAdhesiveRate(m2, tiers) {
-    for (const t of tiers) { if (m2 >= t.min_m2) return t.rate }
-    return tiers[tiers.length - 1]?.rate || 0
-  },
-
-  recalc() {
-    let total = 0
-
-    // Sum all subtotals
-    document.querySelectorAll(".subtotal-display").forEach(el => {
-      total += this.parse(el.textContent)
-    })
-
-    // Add custom services
-    document.querySelectorAll(".custom-price").forEach(el => {
-      total += this.parse(el.textContent)
-    })
-
-    // Update grand totals
-    document.querySelectorAll(".grand-total").forEach(el => {
-      el.textContent = this.fmt(total)
-    })
-
-    // Group totals
-    document.querySelectorAll("[data-group-id]").forEach(group => {
-      let gt = 0
-      group.querySelectorAll(".subtotal-display").forEach(el => {
-        gt += this.parse(el.textContent)
-      })
-      const el = group.querySelector(".group-total")
-      if (el) el.textContent = this.fmt(gt)
-    })
-
-    // Category totals
-    document.querySelectorAll(".cat-content").forEach(cat => {
-      let ct = 0
-      cat.querySelectorAll(".subtotal-display").forEach(el => {
-        ct += this.parse(el.textContent)
-      })
-      const el = cat.querySelector(".cat-total")
-      if (el) el.textContent = this.fmt(ct)
-    })
-
-    // Custom services total
-    let cst = 0
-    document.querySelectorAll(".custom-price").forEach(el => {
-      cst += this.parse(el.textContent)
-    })
-    const cstEl = document.getElementById("custom-services-total")
-    if (cstEl) cstEl.textContent = this.fmt(cst)
-  },
-
-  fmt(value) {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
-  },
-
-  parse(value) {
-    if (!value) return 0
-    return parseFloat(value.replace(/[R$\s]/g, "").replace(/\./g, "").replace(",", ".")) || 0
-  },
-
-  // ── CUSTOM SERVICES ──
-
-  addCustomService() {
-    const nameInput = document.getElementById("custom-service-name")
-    const priceInput = document.getElementById("custom-service-price")
-    const name = nameInput?.value?.trim()
-    const price = parseFloat(priceInput?.value) || 0
-
-    if (!name) { nameInput?.focus(); nameInput?.classList.add("input-error"); setTimeout(() => nameInput?.classList.remove("input-error"), 1000); return }
-    if (price <= 0) { priceInput?.focus(); priceInput?.classList.add("input-error"); setTimeout(() => priceInput?.classList.remove("input-error"), 1000); return }
-
-    const list = document.getElementById("custom-services-list")
-    const id = `cs-${Date.now()}`
-    const row = document.createElement("div")
-    row.id = id
-    row.className = "flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 slide-up"
-    row.innerHTML = `<div class="flex items-center gap-3 min-w-0 flex-1">
-      <i class="fas fa-cog text-gray-400"></i>
-      <span class="font-medium text-gray-800 truncate">${this.escHtml(name)}</span>
+      </div>
     </div>
-    <div class="flex items-center gap-4">
-      <span class="font-mono font-semibold text-lg text-gray-900 custom-price">${this.fmt(price)}</span>
-      <button class="btn btn-ghost btn-xs btn-square text-gray-400 hover:text-red-500" onclick="Calc.removeCustomService('${id}')">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>`
-    list.appendChild(row)
-    nameInput.value = ""
-    priceInput.value = ""
-    this.recalc()
-    nameInput.focus()
-  },
 
-  removeCustomService(id) {
-    const row = document.getElementById(id)
-    if (row) {
-      row.style.transition = "all 0.2s ease-out"
-      row.style.opacity = "0"
-      row.style.transform = "translateX(20px)"
-      setTimeout(() => { row.remove(); this.recalc() }, 200)
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 pb-36">
+      <!-- Grand Total Card -->
+      <div class="bg-white rounded-2xl shadow-xl border border-base-200 p-6 mb-8 flex items-center justify-between transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-gray-100 rounded-xl">
+            <i class="fas fa-coins text-2xl text-gray-600"></i>
+          </div>
+          <div>
+            <span class="text-lg font-medium text-base-content/70">Total Geral</span>
+            <p class="text-sm text-base-content/40">Todos os serviços</p>
+          </div>
+        </div>
+        <div class="text-3xl sm:text-4xl font-bold text-gray-900" id="grand-total">R$ 0,00</div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="mb-6" role="tablist">
+        <div class="tabs tabs-boxed bg-white shadow-sm border border-base-200 p-1 gap-1" id="tabs-container">
+          <!-- Tabs rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Category Contents -->
+      <div id="categories-container">
+        <!-- Categories rendered by JS -->
+      </div>
+
+      <!-- Custom Services Section -->
+      <div class="bg-white rounded-2xl shadow-sm border border-base-200 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-base-100 to-base-50 border-b border-base-200 flex items-center gap-3">
+          <i class="fas fa-plus-circle text-lg text-gray-500"></i>
+          <h3 class="text-lg font-semibold text-base-content">Outros Serviços</h3>
+          <span class="text-sm text-base-content/40">Adicione serviços que não estão na tabela acima</span>
+        </div>
+
+        <div class="p-6">
+          <div id="custom-services-list" class="space-y-3 mb-4"></div>
+
+          <div class="flex items-end gap-3 p-4 bg-base-100 rounded-xl border border-dashed border-base-300">
+            <div class="flex-1">
+              <label class="label">
+                <span class="label-text text-sm font-medium text-base-content/60">Nome do serviço</span>
+              </label>
+              <input type="text"
+                     id="custom-service-name"
+                     placeholder="Ex: Laminação, Encadernação..."
+                     class="input input-bordered input-sm w-full transition-all duration-150" />
+            </div>
+            <div class="w-36">
+              <label class="label">
+                <span class="label-text text-sm font-medium text-base-content/60">Valor (R$)</span>
+              </label>
+              <input type="number"
+                     id="custom-service-price"
+                     min="0"
+                     step="0.50"
+                     placeholder="0,00"
+                     class="input input-bordered input-sm w-full text-right font-mono transition-all duration-150" />
+            </div>
+            <button class="btn btn-primary btn-sm gap-2" id="add-custom-service">
+              <i class="fas fa-plus"></i>
+              Adicionar
+            </button>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-base-200 flex justify-end items-center gap-4">
+            <span class="text-sm font-medium text-base-content/60">Subtotal outros serviços</span>
+            <span class="text-xl font-bold text-gray-900" id="custom-services-total">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Print Receipt Button -->
+      <div class="mt-6 flex justify-center">
+        <button class="btn btn-outline btn-lg gap-3 px-8 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg" id="print-receipt">
+          <i class="fas fa-print text-lg"></i>
+          Imprimir Recibo
+        </button>
+      </div>
+    </div>
+
+    <!-- Sticky Bottom Grand Total Bar -->
+    <div class="sticky bottom-0 z-30 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <i class="fas fa-receipt text-2xl text-gray-400"></i>
+            <div>
+              <h2 class="text-xl font-bold text-white">Total Geral</h2>
+              <p class="text-gray-400 text-xs">Todos os serviços + taxas</p>
+            </div>
+          </div>
+          <span class="text-3xl sm:text-4xl font-bold text-white" id="grand-total-sticky">R$ 0,00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STYLES ─── -->
+  <style>
+    #app { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-  },
-
-  escHtml(str) {
-    const d = document.createElement("div"); d.textContent = str; return d.innerHTML
-  },
-
-  // ── PRINT RECEIPT ──
-
-  printReceipt() {
-    const data = this.collectData()
-    const w = window.open("", "_blank", "width=800,height=600")
-
-    let html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Recibo - Calculadora Xerox do Victor</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<style>
-  @page { margin: 15mm; }
-  body { font-family: 'Inter', sans-serif; color: #1f2937; background: #fff; padding: 0; margin: 0; }
-  .receipt { max-width: 700px; margin: 0 auto; padding: 32px 24px; }
-  .header { text-align: center; border-bottom: 2px solid #1f2937; padding-bottom: 20px; margin-bottom: 24px; }
-  .header h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.05em; }
-  .header p { color: #6b7280; font-size: 14px; margin: 0; }
-  .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin: 20px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 6px 4px; font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-  th:last-child, td:last-child { text-align: right; }
-  td { padding: 5px 4px; border-bottom: 1px solid #f3f4f6; }
-  .mono { font-family: 'Courier New', monospace; }
-  .grand td { font-weight: 700; font-size: 18px; border-top: 3px double #1f2937; padding-top: 10px; }
-  .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }
-  @media print { body { -webkit-print-color-adjust: exact; } }
-</style></head><body>
-<div class="receipt">
-  <div class="header"><h1>Calculadora Xerox do Victor</h1><p>Recibo de Orçamento</p></div>`
-
-    data.categories.forEach(cat => {
-      if (!cat.items.length) return
-      html += `<div class="section-title">${cat.name}</div>
-<table><thead><tr><th>Item</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>`
-      cat.items.forEach(i => {
-        html += `<tr><td>${i.name}</td><td>${i.qty}</td><td class="mono">${i.price}</td><td class="mono">${i.subtotal}</td></tr>`
-      })
-      html += `</tbody></table>`
-    })
-
-    if (data.custom.length) {
-      html += `<div class="section-title">Outros Serviços</div>
-<table><thead><tr><th>Serviço</th><th colspan="2"></th><th>Valor</th></tr></thead><tbody>`
-      data.custom.forEach(s => { html += `<tr><td>${s.name}</td><td colspan="2"></td><td class="mono">${s.price}</td></tr>` })
-      html += `</tbody></table>`
+    .input:focus { transform: scale(1.02); }
+    .tab { transition: all 0.2s ease; }
+    .tab-active:not(.btn) { transform: scale(1.02); }
+    .tabs-boxed .tab-active {
+      --tab-bg: #111827 !important;
+      --tab-border: #111827 !important;
+      background-color: #111827 !important;
+      color: white !important;
     }
+    .tabs-boxed .tab-active:hover {
+      background-color: #1f2937 !important;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
+    .input-error { outline: 2px solid #ef4444; outline-offset: -2px; }
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(20px); }
+    }
+  </style>
 
-    html += `<table><tfoot><tr class="grand"><td colspan="3">TOTAL GERAL</td><td class="mono">${this.fmt(data.total)}</td></tr></tfoot></table>
-<div class="footer">
-  <p>Gerado em ${new Date().toLocaleDateString("pt-BR", { day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })}</p>
-  <p>Calculadora Xerox do Victor &mdash; Obrigado pela preferência!</p>
-</div>
-</div>
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`
+  <!-- ─── JAVASCRIPT ─── -->
+  <script>
+    (function() {
+      'use strict';
 
-    w.document.write(html)
-    w.document.close()
-  },
+      // ── Utility ──
 
-  collectData() {
-    const cats = []
-    document.querySelectorAll(".cat-content").forEach(el => {
-      const tabBtn = document.querySelector(`[onclick="Calc.switchTab(${el.dataset.cat})"]`)
-      const name = tabBtn?.textContent?.trim() || "Categoria"
-      const items = []
-      el.querySelectorAll("tr[data-rules]").forEach(row => {
-        const qty = parseFloat(row.querySelector(".qty-input")?.value) || 0
-        if (qty <= 0) return
-        items.push({
-          name: row.querySelector(".font-medium")?.textContent?.trim() || "Item",
-          qty,
-          price: row.querySelector(".rate-display")?.textContent || "",
-          subtotal: row.querySelector(".subtotal-display")?.textContent || "R$ 0,00"
-        })
-      })
-      if (items.length) cats.push({ name, items })
-    })
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL"
+        }).format(value);
+      }
 
-    const custom = []
-    document.querySelectorAll("#custom-services-list > div").forEach(row => {
-      const n = row.querySelector(".font-medium")?.textContent?.trim()
-      const p = row.querySelector(".custom-price")?.textContent?.trim()
-      if (n && p) custom.push({ name: n, price: p })
-    })
+      function parseCurrency(value) {
+        if (!value) return 0;
+        var cleaned = value
+          .replace(/[R$\s]/g, "")
+          .replace(/\./g, "")
+          .replace(",", ".");
+        return parseFloat(cleaned) || 0;
+      }
 
-    return { categories: cats, custom, total: this.parse(document.querySelector(".grand-total")?.textContent || "R$ 0,00") }
-  }
-}
+      function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
 
-// ── INIT ──
-document.addEventListener("DOMContentLoaded", () => Calc.init())
-</script>
+      function findTieredRate(qty, tiers) {
+        for (var i = 0; i < tiers.length; i++) {
+          if (qty >= tiers[i].min_qty) return tiers[i].rate;
+        }
+        return tiers.length > 0 ? tiers[tiers.length - 1].rate : 0;
+      }
 
+      function findAdhesiveRate(m2, tiers) {
+        for (var i = 0; i < tiers.length; i++) {
+          if (m2 >= tiers[i].min_m2) return tiers[i].rate;
+        }
+        return tiers.length > 0 ? tiers[tiers.length - 1].rate : 0;
+      }
+
+      function formatRateDisplay(rules) {
+        if (rules.type === "flat") {
+          return "R$ " + rules.rate.toFixed(2);
+        } else if (rules.type === "tiered") {
+          return rules.tiers.map(function(t) { return "R$ " + t.rate.toFixed(2); }).join(" | ");
+        } else if (rules.type === "adhesive") {
+          return rules.tiers.map(function(t) { return "R$ " + t.rate.toFixed(2) + "/m²"; }).join(" | ");
+        }
+        return "";
+      }
+
+      function getIconForGroup(groupName) {
+        if (groupName.indexOf("Papel comum") !== -1) return "fa-file";
+        if (groupName.indexOf("Cartão") !== -1 || groupName.indexOf("Couchê") !== -1) return "fa-id-card";
+        if (groupName.indexOf("Adesivo") !== -1 || groupName.indexOf("Leitoso") !== -1) return "fa-tag";
+        if (groupName.indexOf("Vegetal") !== -1) return "fa-leaf";
+        return "fa-file";
+      }
+
+      // ── Render Categories ──
+
+      function render() {
+        renderTabs();
+        renderCategories();
+      }
+
+      function renderTabs() {
+        var container = document.getElementById("tabs-container");
+        container.innerHTML = "";
+        CATEGORIES.forEach(function(cat, index) {
+          var btn = document.createElement("button");
+          btn.className = "tab tab-lg gap-2 flex-1 transition-all duration-200" +
+            (index === 0 ? " tab-active bg-gray-900 text-white hover:bg-gray-800" : " hover:bg-gray-100");
+          btn.setAttribute("data-category-id", cat.id);
+          btn.setAttribute("data-action", "switch-tab");
+          btn.innerHTML = '<i class="fas ' + cat.icon + '"></i><span class="hidden sm:inline">' + cat.name + '</span>';
+          container.appendChild(btn);
+        });
+      }
+
+      function renderCategories() {
+        var container = document.getElementById("categories-container");
+        container.innerHTML = "";
+
+        CATEGORIES.forEach(function(cat, catIndex) {
+          var catDiv = document.createElement("div");
+          catDiv.id = "category_" + cat.id;
+          catDiv.className = (catIndex === 0 ? "" : "hidden") + " space-y-6";
+
+          cat.groups.forEach(function(group) {
+            var isAdhesive = group.items.some(function(it) { return it.pricingRules.type === "adhesive"; });
+            var groupHtml = '';
+
+            groupHtml += '<div class="bg-white rounded-2xl shadow-sm border border-base-200 overflow-hidden transition-all duration-200 hover:shadow-md">';
+            groupHtml += '  <div class="px-6 py-4 bg-gradient-to-r from-base-100 to-base-50 border-b border-base-200 flex items-center gap-3">';
+            groupHtml += '    <i class="fas ' + getIconForGroup(group.name) + ' text-gray-500"></i>';
+            groupHtml += '    <h3 class="text-lg font-semibold text-base-content">' + group.name + '</h3>';
+            groupHtml += '    <span class="ml-auto text-sm font-medium text-base-content/60">Subtotal: <span class="font-mono font-bold text-gray-900 group-total">R$ 0,00</span></span>';
+            groupHtml += '  </div>';
+            groupHtml += '  <div class="overflow-x-auto">';
+            groupHtml += '    <table class="table table-zebra table-pin-rows">';
+            groupHtml += '      <thead>';
+            groupHtml += '        <tr class="text-sm uppercase tracking-wider text-base-content/50">';
+            groupHtml += '          <th class="py-4 pl-6">Item</th>';
+            groupHtml += '          <th class="py-4 text-right">Preço Unit.</th>';
+            groupHtml += '          <th class="py-4 text-right">Qtde.</th>';
+            if (group.name.indexOf("Papel comum") === -1) {
+              groupHtml += '          <th class="py-4 text-center">Corte?</th>';
+            }
+            if (isAdhesive) {
+              groupHtml += '          <th class="py-4 text-right">Largura (m)</th>';
+              groupHtml += '          <th class="py-4 text-right">Altura (m)</th>';
+              groupHtml += '          <th class="py-4 text-right">m²</th>';
+            }
+            groupHtml += '          <th class="py-4 pr-6 text-right">Subtotal</th>';
+            groupHtml += '        </tr>';
+            groupHtml += '      </thead>';
+            groupHtml += '      <tbody>';
+
+            group.items.forEach(function(item) {
+              var isItemAdhesive = item.pricingRules.type === "adhesive";
+              var cutExtra = "";
+
+              if (group.name.indexOf("Papel comum") === -1) {
+                cutExtra = '<td class="text-center py-4">' +
+                  '<input type="checkbox" class="toggle toggle-xs border-gray-300 bg-gray-200 [&:checked]:bg-gray-900 [&:checked]:border-gray-900 cut-checkbox" />' +
+                  '</td>';
+              }
+
+              var adhesiveExtra = "";
+              if (isItemAdhesive) {
+                adhesiveExtra = '<td class="text-right py-4">' +
+                  '<input type="number" min="0" step="0.01" value="" class="input input-bordered input-sm w-24 text-right font-mono transition-all duration-150 adhesive-width" placeholder="0,00" />' +
+                  '</td>' +
+                  '<td class="text-right py-4">' +
+                  '<input type="number" min="0" step="0.01" value="" class="input input-bordered input-sm w-24 text-right font-mono transition-all duration-150 adhesive-height" placeholder="0,00" />' +
+                  '</td>' +
+                  '<td class="text-right py-4"><span class="font-mono text-sm text-base-content/60 adhesive-m2">0,000</span></td>';
+              }
+
+              groupHtml += '<tr class="transition-all duration-150 hover:bg-base-200/50 data-row" data-pricing-rules=\'' + JSON.stringify(item.pricingRules) + '\'>';
+              groupHtml += '  <td class="pl-6 py-4">';
+              groupHtml += '    <div class="flex items-center gap-3">';
+              groupHtml += '      <span class="font-medium text-base-content">' + item.name + '</span>';
+              groupHtml += '    </div>';
+              groupHtml += '  </td>';
+              groupHtml += '  <td class="text-right py-4">';
+              groupHtml += '    <div class="flex flex-col items-end">';
+              groupHtml += '      <span class="font-mono text-sm rate-display">' + formatRateDisplay(item.pricingRules) + '</span>';
+              groupHtml += '    </div>';
+              groupHtml += '  </td>';
+              groupHtml += '  <td class="text-right py-4">';
+              groupHtml += '    <input type="number" min="0" step="1" value="" class="input input-bordered input-sm w-20 text-right font-mono transition-all duration-150 qty-input" />';
+              groupHtml += '  </td>';
+              groupHtml += cutExtra;
+              groupHtml += adhesiveExtra;
+              groupHtml += '  <td class="pr-6 py-4 text-right">';
+              groupHtml += '    <span class="font-mono font-semibold text-gray-900 text-lg item-subtotal">R$ 0,00</span>';
+              groupHtml += '  </td>';
+              groupHtml += '</tr>';
+            });
+
+            groupHtml += '      </tbody>';
+            groupHtml += '    </table>';
+            groupHtml += '  </div>';
+            groupHtml += '</div>';
+
+            catDiv.innerHTML += groupHtml;
+          });
+
+          // Category total
+          catDiv.innerHTML += '<div class="bg-white rounded-2xl shadow-sm border border-base-200 p-6 flex justify-end items-center gap-6">' +
+            '<span class="text-xl font-medium text-base-content/70">Total ' + cat.name + '</span>' +
+            '<span class="text-2xl font-bold text-gray-900 category-total">R$ 0,00</span>' +
+            '</div>';
+
+          container.appendChild(catDiv);
+        });
+      }
+
+      // ── Calculation Logic ──
+
+      function calculateRow(row) {
+        var rules = JSON.parse(row.getAttribute("data-pricing-rules"));
+        var qty = parseFloat(row.querySelector(".qty-input")?.value) || 0;
+        var subtotal = 0;
+
+        if (rules.type === "flat") {
+          subtotal = qty * rules.rate;
+        } else if (rules.type === "tiered") {
+          var rate = findTieredRate(qty, rules.tiers);
+          subtotal = qty * rate;
+        } else if (rules.type === "adhesive") {
+          var width = parseFloat(row.querySelector(".adhesive-width")?.value) || 0;
+          var height = parseFloat(row.querySelector(".adhesive-height")?.value) || 0;
+          var bleed = rules.bleed || 0;
+          if (width > 0 && height > 0) {
+            var effW = width + bleed;
+            var effH = height + bleed;
+            var m2 = effW * effH * qty;
+            var rate = findAdhesiveRate(m2, rules.tiers);
+            var rawTotal = m2 * rate;
+            subtotal = Math.max(rawTotal, rules.min_charge || 0);
+            var m2El = row.querySelector(".adhesive-m2");
+            if (m2El) m2El.textContent = m2.toFixed(3);
+          }
+        }
+
+        // Cut fee: R$ 1,00 per unit
+        var cutCb = row.querySelector(".cut-checkbox");
+        if (cutCb && cutCb.checked && qty > 0) {
+          subtotal += qty * 1.00;
+        }
+
+        var subEl = row.querySelector(".item-subtotal");
+        if (subEl) subEl.textContent = formatCurrency(subtotal);
+
+        calculateAll();
+      }
+
+      function calculateAll() {
+        var total = 0;
+
+        // All item subtotals
+        document.querySelectorAll(".item-subtotal").forEach(function(el) {
+          total += parseCurrency(el.textContent);
+        });
+
+        // Custom services
+        document.querySelectorAll("#custom-services-list .custom-service-price").forEach(function(el) {
+          total += parseCurrency(el.textContent);
+        });
+
+        // Update grand totals
+        document.getElementById("grand-total").textContent = formatCurrency(total);
+        document.getElementById("grand-total-sticky").textContent = formatCurrency(total);
+
+        // Group subtotals
+        document.querySelectorAll(".bg-white.rounded-2xl.shadow-sm.border").forEach(function(group) {
+          var groupTotal = 0;
+          group.querySelectorAll(".item-subtotal").forEach(function(el) {
+            groupTotal += parseCurrency(el.textContent);
+          });
+          var gtEl = group.querySelector(".group-total");
+          if (gtEl) gtEl.textContent = formatCurrency(groupTotal);
+        });
+
+        // Category totals
+        document.querySelectorAll("[id^='category_']").forEach(function(cat) {
+          var catTotal = 0;
+          cat.querySelectorAll(".item-subtotal").forEach(function(el) {
+            catTotal += parseCurrency(el.textContent);
+          });
+          var ctEl = cat.querySelector(".category-total");
+          if (ctEl) ctEl.textContent = formatCurrency(catTotal);
+        });
+
+        // Custom services total
+        var customTotal = 0;
+        document.querySelectorAll("#custom-services-list .custom-service-price").forEach(function(el) {
+          customTotal += parseCurrency(el.textContent);
+        });
+        var cstEl = document.getElementById("custom-services-total");
+        if (cstEl) cstEl.textContent = formatCurrency(customTotal);
+      }
+
+      // ── Tab Switching ──
+
+      function switchTab(categoryId) {
+        document.querySelectorAll("[data-category-id]").forEach(function(t) {
+          t.classList.remove("tab-active", "bg-gray-900", "text-white", "hover:bg-gray-800");
+          t.classList.add("hover:bg-gray-100");
+        });
+        var activeTab = document.querySelector("[data-category-id='" + categoryId + "']");
+        if (activeTab) {
+          activeTab.classList.add("tab-active", "bg-gray-900", "text-white", "hover:bg-gray-800");
+          activeTab.classList.remove("hover:bg-gray-100");
+        }
+
+        document.querySelectorAll("[id^='category_']").forEach(function(el) {
+          el.classList.add("hidden");
+        });
+        var target = document.getElementById("category_" + categoryId);
+        if (target) target.classList.remove("hidden");
+      }
+
+      // ── Custom Services ──
+
+      function addCustomService() {
+        var nameInput = document.getElementById("custom-service-name");
+        var priceInput = document.getElementById("custom-service-price");
+        var name = nameInput?.value?.trim();
+        var price = parseFloat(priceInput?.value) || 0;
+
+        if (!name) {
+          nameInput?.focus();
+          nameInput?.classList.add("input-error");
+          setTimeout(function() { nameInput?.classList.remove("input-error"); }, 1000);
+          return;
+        }
+        if (price <= 0) {
+          priceInput?.focus();
+          priceInput?.classList.add("input-error");
+          setTimeout(function() { priceInput?.classList.remove("input-error"); }, 1000);
+          return;
+        }
+
+        var list = document.getElementById("custom-services-list");
+        if (!list) return;
+
+        var rowId = "custom-service-" + Date.now();
+        var row = document.createElement("div");
+        row.id = rowId;
+        row.className = "flex items-center justify-between p-3 bg-white rounded-xl border border-base-200 transition-all duration-200 hover:shadow-sm";
+        row.style.animation = "fadeIn 0.2s ease-out";
+        row.innerHTML = '<div class="flex items-center gap-3 min-w-0 flex-1">' +
+          '<i class="fas fa-cog text-gray-400"></i>' +
+          '<span class="font-medium text-base-content truncate">' + escapeHtml(name) + '</span>' +
+          '</div>' +
+          '<div class="flex items-center gap-4">' +
+          '<span class="font-mono font-semibold text-lg text-gray-900 custom-service-price">' + formatCurrency(price) + '</span>' +
+          '<button class="btn btn-ghost btn-xs btn-square text-gray-400 hover:text-red-500 transition-colors remove-service" data-service-row="' + rowId + '">' +
+          '<i class="fas fa-times"></i>' +
+          '</button>' +
+          '</div>';
+
+        list.appendChild(row);
+        nameInput.value = "";
+        priceInput.value = "";
+        calculateAll();
+        nameInput.focus();
+      }
+
+      // ── Print Receipt ──
+
+      function printReceipt() {
+        var receiptData = collectReceiptData();
+        var printWin = window.open("", "_blank", "width=800,height=600");
+
+        printWin.document.write('<!DOCTYPE html><html><head>' +
+          '<meta charset="utf-8">' +
+          '<title>Recibo - Calculadora Xerox do Victor</title>' +
+          '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />' +
+          '<style>' +
+          '@page { margin: 15mm; }' +
+          '* { box-sizing: border-box; }' +
+          'body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1f2937; background: #fff; padding: 0; margin: 0; }' +
+          '.receipt { max-width: 700px; margin: 0 auto; padding: 32px 24px; }' +
+          '.header { text-align: center; border-bottom: 2px solid #1f2937; padding-bottom: 20px; margin-bottom: 24px; }' +
+          '.header h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.05em; }' +
+          '.header p { color: #6b7280; font-size: 14px; margin: 0; }' +
+          '.section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; margin: 20px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; }' +
+          'table { width: 100%; border-collapse: collapse; font-size: 13px; }' +
+          'th { text-align: left; padding: 6px 4px; font-weight: 600; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; }' +
+          'th:last-child, td:last-child { text-align: right; }' +
+          'td { padding: 5px 4px; border-bottom: 1px solid #f3f4f6; }' +
+          '.text-right { text-align: right; }' +
+          '.font-mono { font-family: "Courier New", monospace; }' +
+          '.total-row td { font-weight: 700; border-top: 2px solid #1f2937; border-bottom: none; padding-top: 10px; font-size: 15px; }' +
+          '.grand-total td { font-size: 18px; border-top: 3px double #1f2937; padding-top: 10px; }' +
+          '.empty-msg { color: #9ca3af; font-style: italic; padding: 8px 4px; }' +
+          '.footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }' +
+          '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }' +
+          '</style></head><body><div class="receipt">' +
+          '<div class="header"><h1>Calculadora Xerox do Victor</h1><p>Recibo de Orçamento</p></div>');
+
+        receiptData.categories.forEach(function(cat) {
+          if (cat.items.length === 0) return;
+          printWin.document.write('<div class="section-title">' + cat.name + '</div><table><thead><tr><th>Item</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead><tbody>');
+          cat.items.forEach(function(item) {
+            printWin.document.write('<tr><td>' + item.name + '</td><td>' + item.qty + '</td><td class="font-mono">' + item.unitPrice + '</td><td class="font-mono">' + item.subtotal + '</td></tr>');
+          });
+          printWin.document.write('</tbody></table>');
+        });
+
+        if (receiptData.customServices.length > 0) {
+          printWin.document.write('<div class="section-title">Outros Serviços</div><table><thead><tr><th>Serviço</th><th colspan="2"></th><th>Valor</th></tr></thead><tbody>');
+          receiptData.customServices.forEach(function(svc) {
+            printWin.document.write('<tr><td>' + svc.name + '</td><td colspan="2"></td><td class="font-mono">' + svc.price + '</td></tr>');
+          });
+          printWin.document.write('</tbody></table>');
+        }
+
+        printWin.document.write('<table><tfoot><tr class="total-row grand-total"><td colspan="3">TOTAL GERAL</td><td class="font-mono">' + formatCurrency(receiptData.total) + '</td></tr></tfoot></table>' +
+          '<div class="footer"><p>Gerado em ' + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) + '</p>' +
+          '<p>Calculadora Xerox do Victor &mdash; Obrigado pela preferência!</p></div></div>' +
+          '<script>window.onload = function() { window.print(); }</' + 'script>' +
+          '</body></html>');
+
+        printWin.document.close();
+      }
+
+      function collectReceiptData() {
+        var categories = [];
+        CATEGORIES.forEach(function(cat) {
+          var catEl = document.getElementById("category_" + cat.id);
+          if (!catEl) return;
+          var items = [];
+          catEl.querySelectorAll(".data-row").forEach(function(row) {
+            var qty = parseFloat(row.querySelector(".qty-input")?.value) || 0;
+            if (qty <= 0) return;
+            var nameEl = row.querySelector(".font-medium");
+            var name = nameEl?.textContent?.trim() || "Item";
+            var subtotal = row.querySelector(".item-subtotal")?.textContent || "R$ 0,00";
+            var rateDisplay = row.querySelector(".rate-display")?.textContent || "";
+            items.push({ name: name, qty: qty, unitPrice: rateDisplay, subtotal: subtotal });
+          });
+          if (items.length > 0) categories.push({ name: cat.name, items: items });
+        });
+
+        var customServices = [];
+        document.querySelectorAll("#custom-services-list > div").forEach(function(row) {
+          var nameEl = row.querySelector(".font-medium");
+          var priceEl = row.querySelector(".custom-service-price");
+          if (nameEl && priceEl) customServices.push({ name: nameEl.textContent.trim(), price: priceEl.textContent.trim() });
+        });
+
+        var total = parseCurrency(document.getElementById("grand-total").textContent);
+        return { categories: categories, customServices: customServices, total: total };
+      }
+
+      // ── Event Binding ──
+
+      function init() {
+        render();
+
+        // Tab switching (event delegation)
+        document.getElementById("tabs-container").addEventListener("click", function(e) {
+          var btn = e.target.closest("[data-category-id]");
+          if (btn) {
+            e.preventDefault();
+            switchTab(btn.getAttribute("data-category-id"));
+          }
+        });
+
+        // Calculation triggers (event delegation)
+        document.getElementById("categories-container").addEventListener("input", function(e) {
+          var row = e.target.closest(".data-row");
+          if (row) calculateRow(row);
+        });
+
+        document.getElementById("categories-container").addEventListener("change", function(e) {
+          if (e.target.classList.contains("cut-checkbox")) {
+            var row = e.target.closest(".data-row");
+            if (row) calculateRow(row);
+          }
+        });
+
+        // Custom services
+        document.getElementById("add-custom-service").addEventListener("click", addCustomService);
+
+        document.getElementById("custom-services-list").addEventListener("click", function(e) {
+          var btn = e.target.closest(".remove-service");
+          if (btn) {
+            var rowId = btn.getAttribute("data-service-row");
+            var row = document.getElementById(rowId);
+            if (row) {
+              row.style.animation = "slideOut 0.2s ease-out forwards";
+              setTimeout(function() { row.remove(); calculateAll(); }, 200);
+            }
+          }
+        });
+
+        // Enter key on custom service inputs
+        ["custom-service-name", "custom-service-price"].forEach(function(id) {
+          document.getElementById(id).addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addCustomService();
+            }
+          });
+        });
+
+        // Print receipt
+        document.getElementById("print-receipt").addEventListener("click", printReceipt);
+
+        // Initial calculation
+        calculateAll();
+      }
+
+      // Run on DOM ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+
+    })();
+  </script>
 </body>
 </html>
