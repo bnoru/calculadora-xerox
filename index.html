@@ -105,6 +105,7 @@ body{font-family:system-ui,sans-serif;background:#f3f4f6;color:#111827}
 .py-5{padding-top:1.25rem;padding-bottom:1.25rem}
 .pt-4{padding-top:1rem}
 .pt-8{padding-top:2rem}
+.pt-14{padding-top:3.5rem}
 .pb-2{padding-bottom:.5rem}
 .pb-4{padding-bottom:1rem}
 .pb-6{padding-bottom:1.5rem}
@@ -215,7 +216,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-4 pt-8 pb-4">
+  <div class="max-w-7xl mx-auto px-4 pt-14 pb-4">
 
     <!-- Grand Total -->
     <div class="sticky top-0 z-10 bg-white border border-gray-200 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
@@ -384,6 +385,12 @@ const categories = [
       {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_price:10}},
       {id:54,name:"Transparente",pricing_rules:{rate:20,type:"flat",cut_price:10}}
     ]}
+  ]},
+  {id:4,name:"Revelação Fotográfica",groups:[
+    {name:"Revelação",items:[
+      {id:55,name:"10x15",pricing_rules:{rate:4,type:"flat"}},
+      {id:56,name:"15x21",pricing_rules:{rate:8,type:"flat"}}
+    ]}
   ]}
 ];
 
@@ -412,6 +419,12 @@ function recalc(){
 
 function calcRow(row){
   const rules=JSON.parse(row.dataset.rules);
+
+  if(rules.type==="adhesive"){
+    recalcAdhesiveGroup(row.closest("[data-group]"));
+    return;
+  }
+
   const qty=parseFloat(row.querySelector("[data-qty]")?.value)||0;
   let sub=0;
   let activeIdx=-1;
@@ -422,16 +435,6 @@ function calcRow(row){
       activeIdx=findRateIdx(qty,rules.tiers);
       sub=qty*rules.tiers[activeIdx].rate;
     }
-  } else if(rules.type==="adhesive"){
-    const w=parseFloat(row.querySelector("[data-w]")?.value)||0;
-    const h=parseFloat(row.querySelector("[data-h]")?.value)||0;
-    const b=rules.bleed||0;
-    if(w>0&&h>0&&qty>0){
-      const m2=(w+b)*(h+b)*qty;
-      activeIdx=findAdhIdx(m2,rules.tiers);
-      sub=Math.max(m2*rules.tiers[activeIdx].rate,rules.min_charge||0);
-      const e=row.querySelector("[data-m2]");if(e)e.textContent=m2.toFixed(3);
-    }
   }
   row.querySelectorAll(".tier-rate").forEach((el,i)=>{
     el.classList.toggle("font-bold",i===activeIdx);
@@ -441,6 +444,90 @@ function calcRow(row){
   if(cut&&cut.checked&&qty>0) sub+=qty*(rules.cut_price??1);
   const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
   recalc();
+}
+
+// Recalcula um grupo de adesivos somando o m² de todas as linhas (mesmo tipo)
+// para aplicar o desconto por quantidade de forma conjunta, e distribui o
+// valor proporcionalmente entre as linhas.
+function recalcAdhesiveGroup(groupEl){
+  if(!groupEl) return;
+  const rows=[...groupEl.querySelectorAll("tr[data-rules]")];
+  if(rows.length===0) return;
+  const rules=JSON.parse(rows[0].dataset.rules);
+  const b=rules.bleed||0;
+
+  const rowM2=rows.map(row=>{
+    const w=parseFloat(row.querySelector("[data-w]")?.value)||0;
+    const h=parseFloat(row.querySelector("[data-h]")?.value)||0;
+    const qty=parseFloat(row.querySelector("[data-qty]")?.value)||0;
+    const m2=(w>0&&h>0&&qty>0)?(w+b)*(h+b)*qty:0;
+    const e=row.querySelector("[data-m2]");if(e)e.textContent=m2.toFixed(3);
+    return m2;
+  });
+
+  const totalM2=rowM2.reduce((a,c)=>a+c,0);
+  let activeIdx=-1,rate=0;
+  if(totalM2>0){
+    activeIdx=findAdhIdx(totalM2,rules.tiers);
+    rate=rules.tiers[activeIdx].rate;
+  }
+  const rawTotal=totalM2*rate;
+  const finalTotal=totalM2>0?Math.max(rawTotal,rules.min_charge||0):0;
+  const scale=rawTotal>0?finalTotal/rawTotal:0;
+
+  rows.forEach((row,i)=>{
+    const sub=totalM2>0?rowM2[i]*rate*scale:0;
+    const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
+    row.querySelectorAll(".tier-rate").forEach((el,idx)=>{
+      el.classList.toggle("font-bold",totalM2>0&&idx===activeIdx);
+      el.classList.toggle("text-gray-900",totalM2>0&&idx===activeIdx);
+    });
+  });
+
+  recalc();
+}
+
+// Duplica uma linha de item (mesmo tipo), zerando os valores, para permitir
+// múltiplos itens do mesmo tipo (ex: dimensões diferentes de adesivo, ou
+// folhas com e sem corte do mesmo papel).
+function duplicarLinha(btn){
+  const originalRow=btn.closest("tr[data-rules]");
+  const tbody=originalRow.closest("tbody");
+  const itemId=originalRow.dataset.itemId;
+  const newRow=originalRow.cloneNode(true);
+
+  newRow.querySelectorAll("input[type='number']").forEach(inp=>inp.value="");
+  newRow.querySelectorAll("input[type='checkbox']").forEach(inp=>inp.checked=false);
+  const m2cell=newRow.querySelector("[data-m2]");if(m2cell)m2cell.textContent="0,000";
+  const stCell=newRow.querySelector("[data-st]");if(stCell)stCell.textContent=fmt(0);
+  newRow.querySelectorAll(".tier-rate").forEach(el=>el.classList.remove("font-bold","text-gray-900"));
+
+  originalRow.after(newRow);
+  atualizarBotoesRemover(tbody,itemId);
+  recalc();
+}
+
+function removerLinha(btn){
+  const row=btn.closest("tr[data-rules]");
+  const tbody=row.closest("tbody");
+  const itemId=row.dataset.itemId;
+  const rules=JSON.parse(row.dataset.rules);
+  const groupEl=row.closest("[data-group]");
+  row.remove();
+  atualizarBotoesRemover(tbody,itemId);
+  if(rules.type==="adhesive"){
+    recalcAdhesiveGroup(groupEl);
+  } else {
+    recalc();
+  }
+}
+
+function atualizarBotoesRemover(tbody,itemId){
+  const rows=tbody.querySelectorAll(`tr[data-item-id="${itemId}"]`);
+  rows.forEach(row=>{
+    const btn=row.querySelector(".remove-linha-btn");
+    if(btn) btn.style.display=rows.length>1?"inline-block":"none";
+  });
 }
 
 // ========== RENDER ==========
@@ -479,13 +566,16 @@ categories.forEach((c,ci)=>{
     const isPaper=g.name.includes("Papel comum");
     const isAdh=g.items.some(i=>i.pricing_rules?.type==="adhesive");
     const showCut=!isPaper&&!isAdh;
+    const showDup=showCut||isAdh;
     const grp=document.createElement("div");grp.className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm";grp.dataset.group=g.name;
     let html=`<div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2"><div class="w-1 h-6 bg-gray-500 rounded-full"></div><h3 class="font-semibold text-sm">${g.name}</h3><span class="ml-auto text-xs text-gray-500">Subtotal: <span class="font-bold text-gray-900" data-gt>R$ 0,00</span></span></div>`;
     html+=`<table><thead><tr class="text-xs uppercase text-gray-500 bg-gray-50/50">`;
     html+=`<th>Item</th><th class="col-price">Preço Unit.</th><th class="col-qty">Qtde.</th>`;
     if(showCut) html+=`<th class="col-cut">Corte?</th>`;
     if(isAdh) html+=`<th>Largura</th><th>Altura</th><th>m²</th>`;
-    html+=`<th class="col-sub">Subtotal</th></tr></thead><tbody>`;
+    html+=`<th class="col-sub">Subtotal</th>`;
+    if(showDup) html+=`<th style="width:60px"></th>`;
+    html+=`</tr></thead><tbody>`;
     g.items.forEach(item=>{
       const r=item.pricing_rules;
       let pd="";
@@ -493,13 +583,15 @@ categories.forEach((c,ci)=>{
       else if(r.type==="tiered") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}</span>`).join(" | ");
       else if(r.type==="adhesive") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}/m²</span>`).join(" | ");
       const isAdhesive=r?.type==="adhesive";
-      html+=`<tr data-rules='${JSON.stringify(r).replace(/'/g,"&#39;")}'>`;
+      html+=`<tr data-rules='${JSON.stringify(r).replace(/'/g,"&#39;")}' data-item-id="${item.id}">`;
       html+=`<td class="font-medium text-sm">${item.name}</td>`;
       html+=`<td class="col-price"><span class="text-xs text-gray-600">${pd}</span></td>`;
       html+=`<td class="col-qty"><input type="number" min="0" step="1" value="" data-qty class="input input-bordered input-xs w-full bg-white text-right" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
       if(showCut) html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
       if(isAdhesive) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td class="text-xs text-gray-500" data-m2>0,000</td>`;
-      html+=`<td class="col-sub font-semibold text-sm" data-st>R$ 0,00</td></tr>`;
+      html+=`<td class="col-sub font-semibold text-sm" data-st>R$ 0,00</td>`;
+      if(showDup) html+=`<td class="text-center whitespace-nowrap"><button type="button" onclick="duplicarLinha(this)" title="Adicionar outro item deste tipo" style="background:#fff;border:1px solid #d1d5db;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;color:#374151">+</button> <button type="button" onclick="removerLinha(this)" title="Remover este item" class="remove-linha-btn" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;line-height:1;display:none">✕</button></td>`;
+      html+=`</tr>`;
     });
     html+=`</tbody></table>`;
     grp.innerHTML=html;
@@ -524,7 +616,7 @@ outrosDiv.innerHTML=`
   </div>
   <table>
     <thead><tr class="text-xs uppercase text-gray-500 bg-gray-50/50">
-      <th>Descrição</th><th class="col-price">Valor</th><th class="col-sub">Subtotal</th><th style="width:40px"></th>
+      <th>Descrição</th><th class="col-price">Valor unit.</th><th class="col-qty">Qtde.</th><th class="col-sub">Subtotal</th><th style="width:40px"></th>
     </tr></thead>
     <tbody id="outrosBody"></tbody>
   </table>
@@ -545,6 +637,7 @@ function addOutroItem(){
   tr.innerHTML=`
     <td><input type="text" data-desc placeholder="Descrição do serviço" class="input input-bordered input-xs w-full bg-white"></td>
     <td class="col-price"><input type="number" min="0" step="0.01" value="" placeholder="0,00" data-val class="input input-bordered input-xs w-full bg-white text-right" oninput="calcOutro(this)"></td>
+    <td class="col-qty"><input type="number" min="0" step="1" value="1" data-qtd class="input input-bordered input-xs w-full bg-white text-right" oninput="calcOutro(this)"></td>
     <td class="col-sub font-semibold text-sm" data-st>R$ 0,00</td>
     <td class="text-center"><button onclick="removeOutro(this)" class="text-gray-400 hover:text-red-600" title="Remover">✕</button></td>
   `;
@@ -553,7 +646,8 @@ function addOutroItem(){
 function calcOutro(input){
   const row=input.closest("tr");
   const val=parseFloat(row.querySelector("[data-val]").value)||0;
-  row.querySelector("[data-st]").textContent=fmt(val);
+  const qtd=parseFloat(row.querySelector("[data-qtd]").value)||0;
+  row.querySelector("[data-st]").textContent=fmt(val*qtd);
   recalc();
 }
 function removeOutro(btn){
@@ -614,8 +708,9 @@ function gerarRecibo(){
       catDiv.querySelectorAll("#outrosBody tr").forEach(tr=>{
         const desc=(tr.querySelector("[data-desc]")?.value||"").trim();
         const val=parseFloat(tr.querySelector("[data-val]")?.value)||0;
-        if(desc&&val>0){
-          linhas.push({categoria:"Outros serviços",item:desc,qtd:"",sub:fmt(val)});
+        const qtd=parseFloat(tr.querySelector("[data-qtd]")?.value)||0;
+        if(desc&&val>0&&qtd>0){
+          linhas.push({categoria:"Outros serviços",item:desc,qtd:qtd,sub:fmt(val*qtd)});
         }
       });
     } else {
@@ -696,23 +791,39 @@ function abrirOS(){
   document.getElementById("osObs").value="";
 
   // Dimensões, quantidade e corte: puxa da aba Adesivos se já estiver preenchido
-  let largura="",altura="",qtd="",acabamento="";
+  let largura="",altura="",qtd="",acabamento="",obsAuto="";
   const catAdesivos=document.getElementById("cat_3");
   if(catAdesivos){
-    const simplesRow=catAdesivos.querySelector('[data-group="Leitoso corte simples"] tr[data-rules]');
-    const contornoRow=catAdesivos.querySelector('[data-group="Leitoso corte contorno"] tr[data-rules]');
-    const simplesQty=parseFloat(simplesRow?.querySelector("[data-qty]")?.value)||0;
-    const contornoQty=parseFloat(contornoRow?.querySelector("[data-qty]")?.value)||0;
+    const temValor=row=>(parseFloat(row.querySelector("[data-qty]")?.value)||0)>0;
+    const simplesRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte simples"] tr[data-rules]')].filter(temValor);
+    const contornoRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte contorno"] tr[data-rules]')].filter(temValor);
 
-    if(simplesQty>0){
-      largura=simplesRow.querySelector("[data-w]")?.value||"";
-      altura=simplesRow.querySelector("[data-h]")?.value||"";
-      qtd=simplesRow.querySelector("[data-qty]")?.value||"";
+    function resumir(rows){
+      if(rows.length===1){
+        return{
+          largura:rows[0].querySelector("[data-w]")?.value||"",
+          altura:rows[0].querySelector("[data-h]")?.value||"",
+          qtd:rows[0].querySelector("[data-qty]")?.value||"",
+          obs:""
+        };
+      }
+      const totalQtd=rows.reduce((a,r)=>a+(parseFloat(r.querySelector("[data-qty]")?.value)||0),0);
+      const detalhes=rows.map(r=>{
+        const w=r.querySelector("[data-w]")?.value||"?";
+        const h=r.querySelector("[data-h]")?.value||"?";
+        const q=r.querySelector("[data-qty]")?.value||"?";
+        return `${q}x (${w}m × ${h}m)`;
+      }).join(", ");
+      return{largura:"",altura:"",qtd:String(totalQtd),obs:"Dimensões: "+detalhes};
+    }
+
+    if(simplesRows.length>0){
+      const r=resumir(simplesRows);
+      largura=r.largura;altura=r.altura;qtd=r.qtd;obsAuto=r.obs;
       acabamento="Corte simples";
-    } else if(contornoQty>0){
-      largura=contornoRow.querySelector("[data-w]")?.value||"";
-      altura=contornoRow.querySelector("[data-h]")?.value||"";
-      qtd=contornoRow.querySelector("[data-qty]")?.value||"";
+    } else if(contornoRows.length>0){
+      const r=resumir(contornoRows);
+      largura=r.largura;altura=r.altura;qtd=r.qtd;obsAuto=r.obs;
       acabamento="Corte contorno";
     }
   }
@@ -720,6 +831,7 @@ function abrirOS(){
   document.getElementById("osAltura").value=altura;
   document.getElementById("osQtd").value=qtd;
   document.getElementById("osAcabamento").value=acabamento;
+  if(obsAuto) document.getElementById("osObs").value=obsAuto;
 
   document.getElementById("osModal").classList.remove("hidden");
 }
