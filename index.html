@@ -197,8 +197,8 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 
 <div id="app" class="min-h-screen">
   <!-- Header -->
-  <div class="bg-gray-900 text-white px-4 py-5 relative">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+  <div class="bg-gray-900 text-white px-4 py-5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 relative">
       <div class="flex items-center gap-3">
         <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4-w.png" alt="Logo Xerox" class="h-9">
         <h1 class="text-xl font-bold">Calculadora Xerox do Victor</h1>
@@ -208,12 +208,12 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
         <button onclick="abrirOS()" class="btn btn-sm bg-gray-800 text-white hover:bg-gray-700 border-none">📋 Ordem de Serviço</button>
         <button onclick="gerarRecibo()" class="btn btn-sm bg-white text-gray-900 hover:bg-gray-200 border-none">🧾 Gerar Recibo</button>
       </div>
-    </div>
-    <div id="designerBadge" class="z-20 bg-gray-500 text-white text-base font-medium px-3 py-1.5 flex items-center gap-2 shadow-sm" style="position:absolute;top:100%;right:0;border-radius:0 0 0 .5rem">
+      <div id="designerBadge" class="z-20 bg-gray-500 text-white text-base font-medium px-3 py-1.5 flex items-center gap-2 shadow-sm" style="position:absolute;top:calc(100% + 1.25rem);right:0;border-radius:0 0 .5rem .5rem">
       <span>Designer: <span id="designerBadgeName">—</span></span>
         <button onclick="renomearDesigner()" title="Renomear designer" style="background:none;border:none;color:inherit;cursor:pointer;font-size:.8rem;line-height:1;padding:0">✏️</button>
       </div>
     </div>
+  </div>
 
   <div class="max-w-7xl mx-auto px-4 pt-8 pb-4">
 
