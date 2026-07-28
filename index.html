@@ -284,43 +284,10 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
           <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Entrega:</label>
           <input type="datetime-local" id="osEntrega" class="input input-bordered w-full bg-white px-3 py-2">
         </div>
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Arquivo:</label>
-          <input type="text" id="osArquivo" class="input input-bordered w-full bg-white px-3 py-2" placeholder="Nome do arquivo da imagem">
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Largura (m):</label>
-          <input type="number" step="0.01" min="0" id="osLargura" class="input input-bordered w-full bg-white px-3 py-2">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Altura (m):</label>
-          <input type="number" step="0.01" min="0" id="osAltura" class="input input-bordered w-full bg-white px-3 py-2">
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Quantidade:</label>
-          <input type="number" step="1" min="0" id="osQtd" class="input input-bordered w-full bg-white px-3 py-2">
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Material:</label>
-          <select id="osMaterial" class="input input-bordered w-full bg-white px-3 py-2">
-            <option value="">Selecione...</option>
-            <option value="Vinil leitoso">Vinil leitoso</option>
-            <option value="Vinil transparente">Vinil transparente</option>
-            <option value="Lona">Lona</option>
-          </select>
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Acabamento:</label>
-          <select id="osAcabamento" class="input input-bordered w-full bg-white px-3 py-2">
-            <option value="">Selecione...</option>
-            <option value="Ilhós">Ilhós</option>
-            <option value="Laminação transparente">Laminação transparente</option>
-            <option value="Laminação fosca">Laminação fosca</option>
-            <option value="Corte simples">Corte simples</option>
-            <option value="Corte contorno">Corte contorno</option>
-          </select>
-        </div>
-        <div class="flex items-start gap-3">
-          <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label" style="padding-top:.5rem">Observações:</label>
-          <textarea id="osObs" rows="3" placeholder="Observações livres para o setor de adesivos" class="input input-bordered w-full bg-white px-3 py-2" style="height:auto;resize:vertical"></textarea>
+
+        <div id="osItemsContainer" class="flex flex-col gap-3"></div>
+        <div class="no-print">
+          <button type="button" onclick="adicionarItemOS()" class="btn btn-sm btn-outline">+ Adicionar item</button>
         </div>
       </div>
       <div class="no-print flex gap-2 justify-end p-4 border-t border-gray-200 bg-gray-50">
@@ -710,7 +677,7 @@ function gerarRecibo(){
         const val=parseFloat(tr.querySelector("[data-val]")?.value)||0;
         const qtd=parseFloat(tr.querySelector("[data-qtd]")?.value)||0;
         if(desc&&val>0&&qtd>0){
-          linhas.push({categoria:"Outros serviços",item:desc,qtd:qtd,sub:fmt(val*qtd)});
+          linhas.push({categoria:"Outros serviços",item:desc,qtd:qtd,unit:fmt(val),sub:fmt(val*qtd)});
         }
       });
     } else {
@@ -724,7 +691,8 @@ function gerarRecibo(){
           const sub=subEl?subEl.textContent:fmt(0);
           const cutEl=tr.querySelector("[data-cut]");
           const cutTxt=(cutEl&&cutEl.checked)?" + corte":"";
-          linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:name+cutTxt,qtd:qty,sub:sub});
+          const unitVal=qty>0?parse(sub)/qty:0;
+          linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:name+cutTxt,qtd:qty,unit:fmt(unitVal),sub:sub});
         }
       });
     }
@@ -737,10 +705,10 @@ function gerarRecibo(){
 
   let rowsHtml="";
   if(linhas.length===0){
-    rowsHtml=`<tr><td colspan="4" style="text-align:center;padding:20px;color:#888">Nenhum item selecionado</td></tr>`;
+    rowsHtml=`<tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Nenhum item selecionado</td></tr>`;
   } else {
     linhas.forEach(l=>{
-      rowsHtml+=`<tr class="border-b border-gray-100"><td class="py-2 px-2 text-left text-xs text-gray-600">${escapeHtml(l.categoria)}</td><td class="py-2 px-2 text-left text-sm font-medium">${escapeHtml(l.item)}</td><td class="py-2 px-2 text-center text-sm">${l.qtd}</td><td class="py-2 px-2 text-right text-sm font-semibold">${l.sub}</td></tr>`;
+      rowsHtml+=`<tr class="border-b border-gray-100"><td class="py-2 px-2 text-left text-xs text-gray-600">${escapeHtml(l.categoria)}</td><td class="py-2 px-2 text-left text-sm font-medium">${escapeHtml(l.item)}</td><td class="py-2 px-2 text-center text-sm">${l.qtd}</td><td class="py-2 px-2 text-right text-sm text-gray-600">${l.unit}</td><td class="py-2 px-2 text-right text-sm font-semibold">${l.sub}</td></tr>`;
     });
   }
 
@@ -757,7 +725,7 @@ function gerarRecibo(){
     <div class="px-6 pb-2">
       <table class="w-full mt-2">
         <thead><tr class="text-xs uppercase text-gray-500 bg-gray-50">
-          <th class="text-left py-2 px-2">Categoria</th><th class="text-left py-2 px-2">Item</th><th class="text-center py-2 px-2">Qtde.</th><th class="text-right py-2 px-2">Subtotal</th>
+          <th class="text-left py-2 px-2">Categoria</th><th class="text-left py-2 px-2">Item</th><th class="text-center py-2 px-2">Qtde.</th><th class="text-right py-2 px-2">Preço Unit.</th><th class="text-right py-2 px-2">Subtotal</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
@@ -786,58 +754,141 @@ function abrirOS(){
   // Campos a serem preenchidos manualmente pelo designer: sempre começam em branco
   document.getElementById("osNota").value="";
   document.getElementById("osEntrega").value="";
-  document.getElementById("osArquivo").value="";
-  document.getElementById("osMaterial").value="";
-  document.getElementById("osObs").value="";
 
-  // Dimensões, quantidade e corte: puxa da aba Adesivos se já estiver preenchido
-  let largura="",altura="",qtd="",acabamento="",obsAuto="";
+  // Monta os itens: um bloco por linha de adesivo já preenchida na calculadora
+  // (largura/altura/quantidade/acabamento), ou um bloco em branco se não houver nenhuma.
+  const container=document.getElementById("osItemsContainer");
+  container.innerHTML="";
+
+  const itensImportados=[];
   const catAdesivos=document.getElementById("cat_3");
   if(catAdesivos){
     const temValor=row=>(parseFloat(row.querySelector("[data-qty]")?.value)||0)>0;
     const simplesRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte simples"] tr[data-rules]')].filter(temValor);
     const contornoRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte contorno"] tr[data-rules]')].filter(temValor);
 
-    function resumir(rows){
-      if(rows.length===1){
-        return{
-          largura:rows[0].querySelector("[data-w]")?.value||"",
-          altura:rows[0].querySelector("[data-h]")?.value||"",
-          qtd:rows[0].querySelector("[data-qty]")?.value||"",
-          obs:""
-        };
-      }
-      const totalQtd=rows.reduce((a,r)=>a+(parseFloat(r.querySelector("[data-qty]")?.value)||0),0);
-      const detalhes=rows.map(r=>{
-        const w=r.querySelector("[data-w]")?.value||"?";
-        const h=r.querySelector("[data-h]")?.value||"?";
-        const q=r.querySelector("[data-qty]")?.value||"?";
-        return `${q}x (${w}m × ${h}m)`;
-      }).join(", ");
-      return{largura:"",altura:"",qtd:String(totalQtd),obs:"Dimensões: "+detalhes};
-    }
-
-    if(simplesRows.length>0){
-      const r=resumir(simplesRows);
-      largura=r.largura;altura=r.altura;qtd=r.qtd;obsAuto=r.obs;
-      acabamento="Corte simples";
-    } else if(contornoRows.length>0){
-      const r=resumir(contornoRows);
-      largura=r.largura;altura=r.altura;qtd=r.qtd;obsAuto=r.obs;
-      acabamento="Corte contorno";
-    }
+    simplesRows.forEach(row=>{
+      itensImportados.push({
+        largura:row.querySelector("[data-w]")?.value||"",
+        altura:row.querySelector("[data-h]")?.value||"",
+        qtd:row.querySelector("[data-qty]")?.value||"",
+        acabamento:"Corte simples"
+      });
+    });
+    contornoRows.forEach(row=>{
+      itensImportados.push({
+        largura:row.querySelector("[data-w]")?.value||"",
+        altura:row.querySelector("[data-h]")?.value||"",
+        qtd:row.querySelector("[data-qty]")?.value||"",
+        acabamento:"Corte contorno"
+      });
+    });
   }
-  document.getElementById("osLargura").value=largura;
-  document.getElementById("osAltura").value=altura;
-  document.getElementById("osQtd").value=qtd;
-  document.getElementById("osAcabamento").value=acabamento;
-  if(obsAuto) document.getElementById("osObs").value=obsAuto;
+
+  if(itensImportados.length===0){
+    container.appendChild(criarItemOS());
+  } else {
+    itensImportados.forEach(dados=>container.appendChild(criarItemOS(dados)));
+  }
+  atualizarBotoesRemoverItemOS();
 
   document.getElementById("osModal").classList.remove("hidden");
 }
 
 function fecharOS(){
   document.getElementById("osModal").classList.add("hidden");
+}
+
+const OS_MATERIAIS=["Adesivo leitoso","Adesivo leitoso blackout","Adesivo fosco","Adesivo transparente normal","Adesivo transparente espelhado","Lona comum","Lona fosca","Tecido","Tecido canvas","Adesivo refletivo","Adesivo jateado","Papel comum","Recorte vinil","Recorte emborrachado"];
+const OS_ACABAMENTOS=["Corda em cima","Corda nas 4 pontas","Laminação transparente","Laminação leitosa","Material do cliente","Corte contorno","Ímã","PVC","Ilhós","Corte simples","Sem acabamento"];
+const OS_MATERIAIS_COM_COR=["Recorte vinil","Recorte emborrachado"];
+
+function criarItemOS(dados={}){
+  const div=document.createElement("div");
+  div.className="os-item border border-gray-200 rounded-lg p-3 flex flex-col gap-2";
+  div.dataset.osItem="1";
+
+  const opcoesMaterial=`<option value="">Selecione...</option>`+OS_MATERIAIS.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+  const opcoesAcabamento=`<option value="">Selecione...</option>`+OS_ACABAMENTOS.map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
+
+  div.innerHTML=`
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-gray-500 uppercase">Item</span>
+      <button type="button" onclick="removerItemOS(this)" class="os-item-remove no-print" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px" title="Remover item">✕</button>
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Arquivo:</label>
+      <input type="text" data-os-arquivo class="input input-bordered w-full bg-white px-3 py-2" placeholder="Nome do arquivo da imagem">
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Largura (m):</label>
+      <input type="number" step="0.01" min="0" data-os-largura class="input input-bordered w-full bg-white px-3 py-2">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Altura (m):</label>
+      <input type="number" step="0.01" min="0" data-os-altura class="input input-bordered w-full bg-white px-3 py-2">
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Quantidade:</label>
+      <input type="number" step="1" min="0" data-os-qtd class="input input-bordered w-full bg-white px-3 py-2">
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Material:</label>
+      <select data-os-material class="input input-bordered w-full bg-white px-3 py-2" onchange="atualizarCampoCor(this)">${opcoesMaterial}</select>
+    </div>
+    <div class="flex items-center gap-3 os-cor-wrapper" style="display:none">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Cor:</label>
+      <input type="text" data-os-cor class="input input-bordered w-full bg-white px-3 py-2" placeholder="Cor do vinil/emborrachado">
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Acabamento:</label>
+      <select data-os-acabamento class="input input-bordered w-full bg-white px-3 py-2">${opcoesAcabamento}</select>
+    </div>
+    <div class="flex items-start gap-3">
+      <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label" style="padding-top:.5rem">Observações:</label>
+      <textarea data-os-obs rows="2" class="input input-bordered w-full bg-white px-3 py-2" style="height:auto;resize:vertical" placeholder="Observações deste item"></textarea>
+    </div>
+  `;
+
+  if(dados.arquivo) div.querySelector("[data-os-arquivo]").value=dados.arquivo;
+  if(dados.largura) div.querySelector("[data-os-largura]").value=dados.largura;
+  if(dados.altura) div.querySelector("[data-os-altura]").value=dados.altura;
+  if(dados.qtd) div.querySelector("[data-os-qtd]").value=dados.qtd;
+  if(dados.material) div.querySelector("[data-os-material]").value=dados.material;
+  if(dados.acabamento) div.querySelector("[data-os-acabamento]").value=dados.acabamento;
+  if(dados.obs) div.querySelector("[data-os-obs]").value=dados.obs;
+  if(dados.cor) div.querySelector("[data-os-cor]").value=dados.cor;
+  atualizarCampoCor(div.querySelector("[data-os-material]"));
+
+  return div;
+}
+
+function adicionarItemOS(){
+  const container=document.getElementById("osItemsContainer");
+  container.appendChild(criarItemOS());
+  atualizarBotoesRemoverItemOS();
+}
+
+function removerItemOS(btn){
+  btn.closest("[data-os-item]").remove();
+  atualizarBotoesRemoverItemOS();
+}
+
+function atualizarBotoesRemoverItemOS(){
+  const items=document.querySelectorAll('#osItemsContainer [data-os-item]');
+  items.forEach(item=>{
+    const btn=item.querySelector(".os-item-remove");
+    if(btn) btn.style.display=items.length>1?"inline-block":"none";
+  });
+}
+
+function atualizarCampoCor(select){
+  const item=select.closest("[data-os-item]");
+  const wrapper=item.querySelector(".os-cor-wrapper");
+  if(OS_MATERIAIS_COM_COR.includes(select.value)){
+    wrapper.style.display="flex";
+  } else {
+    wrapper.style.display="none";
+    const corInput=item.querySelector("[data-os-cor]"); if(corInput) corInput.value="";
+  }
 }
 </script>
 </body>
