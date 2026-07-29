@@ -185,12 +185,13 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 #reciboModal.hidden{display:none}
 #osModal.hidden{display:none}
 @media print{
-  body *{visibility:hidden}
-  #reciboModal:not(.hidden), #reciboModal:not(.hidden) *{visibility:visible}
-  #osModal:not(.hidden), #osModal:not(.hidden) *{visibility:visible}
-  #reciboModal:not(.hidden){position:absolute;top:0;left:0;width:100%;background:#fff!important;padding:0!important;margin:0!important}
-  #osModal:not(.hidden){position:absolute;top:0;left:0;width:100%;background:#fff!important;padding:0!important;margin:0!important}
+  #app{display:none!important}
   .no-print{display:none!important}
+  #reciboModal:not(.hidden), #osModal:not(.hidden){display:block!important;position:static!important;background:#fff!important;padding:0!important;margin:0!important}
+  #reciboModal *, #osModal *{min-height:0!important}
+  #reciboModal>div, #osModal>div{margin:0!important;padding:0!important;display:block!important}
+  #reciboModal .bg-white.rounded-lg, #osModal .bg-white.rounded-lg{margin:0!important;box-shadow:none!important;max-width:100%!important}
+  @page{margin:10mm}
 }
 </style>
 </head>
