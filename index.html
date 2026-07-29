@@ -263,7 +263,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
         <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4.png" alt="Logo Xerox do Victor" class="h-9">
         <div>
           <h2 class="text-lg font-bold">Ordem de Serviço</h2>
-          <p class="text-xs text-gray-500">Setor de Adesivos — Vinil / Lona</p>
+          <p class="text-xs text-gray-500">Setor de Grandes Formatos — Vinil / Lona</p>
         </div>
       </div>
       <div class="px-6 py-4 flex flex-col gap-3">
@@ -328,6 +328,10 @@ const categories = [
     {name:"Vegetal",items:[
       {id:41,name:"A4",pricing_rules:{rate:7,type:"flat"}},
       {id:42,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
+    ]},
+    {name:"Vinílico A3",items:[
+      {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:1}]}},
+      {id:54,name:"Transparente",pricing_rules:{rate:20,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:1}]}}
     ]}
   ]},
   {id:2,name:"P/B",groups:[
@@ -342,22 +346,30 @@ const categories = [
       {id:50,name:"A0 imagem",pricing_rules:{rate:63.5,type:"flat"}}
     ]}
   ]},
-  {id:3,name:"Adesivos",groups:[
+  {id:3,name:"Grandes Formatos",groups:[
     {name:"Leitoso corte simples",items:[
       {id:51,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:50,min_m2:4.01},{rate:55,min_m2:1.01},{rate:60,min_m2:0}],min_charge:30}}
     ]},
     {name:"Leitoso corte contorno",items:[
       {id:52,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:55,min_m2:4.01},{rate:65,min_m2:2.01},{rate:80,min_m2:1.01},{rate:120,min_m2:0}],min_charge:45}}
     ]},
-    {name:"Vinílico A3",items:[
-      {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_price:10}},
-      {id:54,name:"Transparente",pricing_rules:{rate:20,type:"flat",cut_price:10}}
+    {name:"Lona/Banner",items:[
+      {id:58,name:"",pricing_rules:{type:"adhesive",bleed:0,tiers:[{rate:60,min_m2:4.01},{rate:70,min_m2:1.01},{rate:90,min_m2:0}],finishings:[{key:"madeira",label:"Madeira",price:10,condition:"m2<=1"},{key:"ilhos",label:"Ilhós",price:30}]}}
+    ]},
+    {name:"Canvas",items:[
+      {id:57,name:"",pricing_rules:{type:"canvas",rate:120,max_roll:0.96}}
     ]}
   ]},
   {id:4,name:"Revelação Fotográfica",groups:[
     {name:"Revelação",items:[
       {id:55,name:"10x15",pricing_rules:{rate:4,type:"flat"}},
       {id:56,name:"15x21",pricing_rules:{rate:8,type:"flat"}}
+    ]}
+  ]},
+  {id:5,name:"Balcão",groups:[
+    {name:"Plastificação",no_cut:true,items:[
+      {id:59,name:"Plastificação A4",pricing_rules:{type:"tiered",tiers:[{rate:6,min_qty:21},{rate:7,min_qty:11},{rate:8,min_qty:7},{rate:9,min_qty:0}]}},
+      {id:60,name:"Plastificação A3",pricing_rules:{type:"tiered",tiers:[{rate:10,min_qty:21},{rate:12,min_qty:11},{rate:13,min_qty:7},{rate:15,min_qty:0}]}}
     ]}
   ]}
 ];
@@ -385,11 +397,24 @@ function recalc(){
   });
 }
 
+// Mostra/esconde o dropdown de opções de corte (ex: máquina vs manual)
+// quando o toggle de corte é ativado/desativado.
+function onCutToggle(checkbox){
+  const row=checkbox.closest("[data-rules]");
+  const select=row.querySelector("[data-cut-options]");
+  if(select) select.style.display=checkbox.checked?"inline-block":"none";
+  calcRow(row);
+}
+
 function calcRow(row){
   const rules=JSON.parse(row.dataset.rules);
 
   if(rules.type==="adhesive"){
     recalcAdhesiveGroup(row.closest("[data-group]"));
+    return;
+  }
+  if(rules.type==="canvas"){
+    calcCanvasRow(row,rules);
     return;
   }
 
@@ -409,7 +434,9 @@ function calcRow(row){
     el.classList.toggle("text-gray-900",i===activeIdx);
   });
   const cut=row.querySelector("[data-cut]");
-  if(cut&&cut.checked&&qty>0) sub+=qty*(rules.cut_price??1);
+  const cutOptionsSelect=row.querySelector("[data-cut-options]");
+  const cutPrice=cutOptionsSelect?(parseFloat(cutOptionsSelect.value)||0):(rules.cut_price??1);
+  if(cut&&cut.checked&&qty>0) sub+=qty*cutPrice;
   const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
   recalc();
 }
@@ -444,7 +471,19 @@ function recalcAdhesiveGroup(groupEl){
   const scale=rawTotal>0?finalTotal/rawTotal:0;
 
   rows.forEach((row,i)=>{
-    const sub=totalM2>0?rowM2[i]*rate*scale:0;
+    let sub=totalM2>0?rowM2[i]*rate*scale:0;
+    if(rowM2[i]>0){
+      (rules.finishings||[]).forEach(f=>{
+        const chk=row.querySelector(`[data-finishing="${f.key}"]`);
+        if(chk&&chk.checked){
+          if(f.condition==="m2<=1"){
+            if(rowM2[i]<=1) sub+=f.price;
+          } else {
+            sub+=f.price;
+          }
+        }
+      });
+    }
     const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
     row.querySelectorAll(".tier-rate").forEach((el,idx)=>{
       el.classList.toggle("font-bold",totalM2>0&&idx===activeIdx);
@@ -452,6 +491,40 @@ function recalcAdhesiveGroup(groupEl){
     });
   });
 
+  recalc();
+}
+
+// Calcula o preço do Canvas: cobrado por metro linear (não por m²), limitado
+// pela largura do rolo (max_roll). Se as duas medidas excederem o rolo, a
+// impressão não é possível.
+function calcCanvasRow(row,rules){
+  const w=parseFloat(row.querySelector("[data-w]")?.value)||0;
+  const h=parseFloat(row.querySelector("[data-h]")?.value)||0;
+  const st=row.querySelector("[data-st]");
+  const maxRoll=rules.max_roll;
+
+  row.dataset.canvasError="0";
+
+  if(w<=0||h<=0){
+    if(st) st.textContent=fmt(0);
+    recalc();
+    return;
+  }
+
+  if(w>maxRoll&&h>maxRoll){
+    row.dataset.canvasError="1";
+    if(st) st.innerHTML=`<span style="color:#dc2626;font-weight:600">Impressão não é possível</span>`;
+    recalc();
+    return;
+  }
+
+  let valor;
+  if(w<=maxRoll&&h<=maxRoll){
+    valor=rules.rate*Math.min(w,h);
+  } else {
+    valor=rules.rate*Math.max(w,h);
+  }
+  if(st) st.textContent=fmt(valor);
   recalc();
 }
 
@@ -469,6 +542,9 @@ function duplicarLinha(btn){
   const m2cell=newRow.querySelector("[data-m2]");if(m2cell)m2cell.textContent="0,000";
   const stCell=newRow.querySelector("[data-st]");if(stCell)stCell.textContent=fmt(0);
   newRow.querySelectorAll(".tier-rate").forEach(el=>el.classList.remove("font-bold","text-gray-900"));
+  newRow.dataset.canvasError="0";
+  const cutSelect=newRow.querySelector("[data-cut-options]");
+  if(cutSelect){cutSelect.style.display="none";cutSelect.selectedIndex=0;}
 
   originalRow.after(newRow);
   atualizarBotoesRemover(tbody,itemId);
@@ -533,14 +609,19 @@ categories.forEach((c,ci)=>{
   c.groups.forEach(g=>{
     const isPaper=g.name.includes("Papel comum");
     const isAdh=g.items.some(i=>i.pricing_rules?.type==="adhesive");
-    const showCut=!isPaper&&!isAdh;
-    const showDup=showCut||isAdh;
+    const isCanvas=g.items.some(i=>i.pricing_rules?.type==="canvas");
+    const showCut=!isPaper&&!isAdh&&!isCanvas&&!g.no_cut;
+    const showDup=showCut||isAdh||isCanvas;
+    const finishingsList=(g.items.find(i=>i.pricing_rules?.finishings)?.pricing_rules.finishings)||[];
     const grp=document.createElement("div");grp.className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm";grp.dataset.group=g.name;
     let html=`<div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2"><div class="w-1 h-6 bg-gray-500 rounded-full"></div><h3 class="font-semibold text-sm">${g.name}</h3><span class="ml-auto text-xs text-gray-500">Subtotal: <span class="font-bold text-gray-900" data-gt>R$ 0,00</span></span></div>`;
     html+=`<table><thead><tr class="text-xs uppercase text-gray-500 bg-gray-50/50">`;
-    html+=`<th>Item</th><th class="col-price">Preço Unit.</th><th class="col-qty">Qtde.</th>`;
+    html+=`<th>Item</th><th class="col-price">Preço Unit.</th>`;
+    if(!isCanvas) html+=`<th class="col-qty">Qtde.</th>`;
     if(showCut) html+=`<th class="col-cut">Corte?</th>`;
     if(isAdh) html+=`<th>Largura</th><th>Altura</th><th>m²</th>`;
+    if(isCanvas) html+=`<th>Largura</th><th>Altura</th>`;
+    finishingsList.forEach(f=>html+=`<th class="text-center">${f.label}</th>`);
     html+=`<th class="col-sub">Subtotal</th>`;
     if(showDup) html+=`<th style="width:60px"></th>`;
     html+=`</tr></thead><tbody>`;
@@ -550,13 +631,26 @@ categories.forEach((c,ci)=>{
       if(r.type==="flat") pd=`R$ ${r.rate.toFixed(2)}`;
       else if(r.type==="tiered") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}</span>`).join(" | ");
       else if(r.type==="adhesive") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}/m²</span>`).join(" | ");
+      else if(r.type==="canvas") pd=`R$ ${r.rate.toFixed(2)}/m linear`;
       const isAdhesive=r?.type==="adhesive";
+      const isCanvasItem=r?.type==="canvas";
       html+=`<tr data-rules='${JSON.stringify(r).replace(/'/g,"&#39;")}' data-item-id="${item.id}">`;
       html+=`<td class="font-medium text-sm">${item.name}</td>`;
       html+=`<td class="col-price"><span class="text-xs text-gray-600">${pd}</span></td>`;
-      html+=`<td class="col-qty"><input type="number" min="0" step="1" value="" data-qty class="input input-bordered input-xs w-full bg-white text-right" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
-      if(showCut) html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
+      if(!isCanvasItem) html+=`<td class="col-qty"><input type="number" min="0" step="1" value="" data-qty class="input input-bordered input-xs w-full bg-white text-right" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
+      if(showCut){
+        if(r.cut_options){
+          const optsHtml=r.cut_options.map((o,i)=>`<option value="${o.price}" ${i===0?"selected":""}>${o.label}</option>`).join("");
+          html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="onCutToggle(this)"><br><select data-cut-options class="input input-bordered input-xs" style="display:none;margin-top:4px;width:130px" onchange="calcRow(this.closest('[data-rules]'))">${optsHtml}</select></td>`;
+        } else {
+          html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
+        }
+      }
       if(isAdhesive) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td class="text-xs text-gray-500" data-m2>0,000</td>`;
+      if(isCanvasItem) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
+      (r.finishings||[]).forEach(f=>{
+        html+=`<td class="text-center"><input type="checkbox" data-finishing="${f.key}" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
+      });
       html+=`<td class="col-sub font-semibold text-sm" data-st>R$ 0,00</td>`;
       if(showDup) html+=`<td class="text-center whitespace-nowrap"><button type="button" onclick="duplicarLinha(this)" title="Adicionar outro item deste tipo" style="background:#fff;border:1px solid #d1d5db;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;color:#374151">+</button> <button type="button" onclick="removerLinha(this)" title="Remover este item" class="remove-linha-btn" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;line-height:1;display:none">✕</button></td>`;
       html+=`</tr>`;
@@ -684,11 +778,24 @@ function gerarRecibo(){
     } else {
       const cat=categories.find(c=>String(c.id)===String(catId));
       catDiv.querySelectorAll("tr[data-rules]").forEach(tr=>{
+        const rules=JSON.parse(tr.dataset.rules);
+        const groupName=tr.closest("[data-group]")?.dataset.group||"";
+        const name=tr.querySelector("td").textContent.trim();
+        const subEl=tr.querySelector("[data-st]");
+
+        if(rules.type==="canvas"){
+          const w=parseFloat(tr.querySelector("[data-w]")?.value)||0;
+          const h=parseFloat(tr.querySelector("[data-h]")?.value)||0;
+          const temErro=tr.dataset.canvasError==="1";
+          if(w>0&&h>0&&!temErro){
+            const sub=subEl?subEl.textContent:fmt(0);
+            linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:`${w}m × ${h}m`,qtd:1,unit:sub,sub:sub});
+          }
+          return;
+        }
+
         const qty=parseFloat(tr.querySelector("[data-qty]")?.value)||0;
         if(qty>0){
-          const name=tr.querySelector("td").textContent.trim();
-          const groupName=tr.closest("[data-group]")?.dataset.group||"";
-          const subEl=tr.querySelector("[data-st]");
           const sub=subEl?subEl.textContent:fmt(0);
           const cutEl=tr.querySelector("[data-cut]");
           const cutTxt=(cutEl&&cutEl.checked)?" + corte":"";
