@@ -202,7 +202,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
   <div class="bg-gray-900 text-white px-4 py-5">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 relative">
       <div class="flex items-center gap-3">
-        <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4-w.png" alt="Logo Xerox" class="h-9">
+        <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4-w.png" alt="Logo Xerox" class="h-9" style="cursor:pointer" onclick="logoClick()" title="Limpar tudo e voltar para Color">
         <h1 class="text-xl font-bold">Calculadora Xerox do Victor</h1>
       </div>
       <div class="flex items-center gap-2">
@@ -740,9 +740,14 @@ function renomearDesigner(){
 atualizarBadgeDesigner();
 
 // ========== LIMPAR TUDO ==========
-function limparTudo(){
-  if(!confirm("Tem certeza que deseja limpar todos os campos?")) return;
+// Clique na logo: limpa tudo e volta para a primeira aba (Color)
+function logoClick(){
+  limparTudo();
+  const firstTabBtn=tabsEl.querySelector("button");
+  if(firstTabBtn) firstTabBtn.click();
+}
 
+function limparTudo(){
   document.querySelectorAll("[data-qty]").forEach(el=>el.value="");
   document.querySelectorAll("[data-w]").forEach(el=>el.value="");
   document.querySelectorAll("[data-h]").forEach(el=>el.value="");
