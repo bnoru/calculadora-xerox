@@ -955,7 +955,7 @@ function criarItemOS(dados={}){
       <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label">Acabamento:</label>
       <select data-os-acabamento class="input input-bordered w-full bg-white px-3 py-2">${opcoesAcabamento}</select>
     </div>
-    <div class="flex items-start gap-3">
+    <div class="os-obs-row flex items-start gap-3">
       <label class="text-sm font-medium text-gray-700 whitespace-nowrap os-label" style="padding-top:.5rem">Observações:</label>
       <textarea data-os-obs rows="2" class="input input-bordered w-full bg-white px-3 py-2" style="height:auto;resize:vertical" placeholder="Observações deste item"></textarea>
     </div>
@@ -1003,6 +1003,26 @@ function atualizarCampoCor(select){
     const corInput=item.querySelector("[data-os-cor]"); if(corInput) corInput.value="";
   }
 }
+
+// Esconde a linha de Observações de cada item da OS na impressão quando o
+// campo estiver vazio (evita imprimir o placeholder como se fosse conteúdo).
+window.onbeforeprint=function(){
+  document.querySelectorAll(".os-obs-row").forEach(row=>{
+    const ta=row.querySelector("[data-os-obs]");
+    if(ta&&ta.value.trim()===""){
+      row.dataset.hiddenForPrint="1";
+      row.style.display="none";
+    }
+  });
+};
+window.onafterprint=function(){
+  document.querySelectorAll(".os-obs-row").forEach(row=>{
+    if(row.dataset.hiddenForPrint==="1"){
+      row.style.display="";
+      delete row.dataset.hiddenForPrint;
+    }
+  });
+};
 </script>
 </body>
 </html>
