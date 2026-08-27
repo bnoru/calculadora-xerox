@@ -305,7 +305,7 @@ const categories = [
   {id:1,name:"Color",groups:[
     {name:"Papel comum",items:[
       {id:27,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:1.2,min_qty:111},{rate:2,min_qty:51},{rate:2.5,min_qty:31},{rate:3,min_qty:16},{rate:3.5,min_qty:0}]}},
-      {id:28,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:3.5,min_qty:101},{rate:4.5,min_qty:51},{rate:5.5,min_qty:21},{rate:6,min_qty:11},{rate:7,min_qty:0}]}}
+      {id:28,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2}],tiers:[{rate:3.5,min_qty:101},{rate:4.5,min_qty:51},{rate:5.5,min_qty:21},{rate:6,min_qty:11},{rate:7,min_qty:0}]}}
     ]},
     {name:"Plotter",no_cut:true,items:[
       {id:29,name:"A2 traço",pricing_rules:{rate:10.45,type:"flat"}},
@@ -316,30 +316,30 @@ const categories = [
       {id:34,name:"A0 imagem",pricing_rules:{rate:79.85,type:"flat"}}
     ]},
     {name:"Cartão / Couchê 180/170g",items:[
-      {id:35,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:2.5,min_qty:101},{rate:3,min_qty:51},{rate:3.5,min_qty:31},{rate:5,min_qty:0}]}},
-      {id:36,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:6.5,min_qty:101},{rate:7,min_qty:51},{rate:8,min_qty:21},{rate:12,min_qty:0}]}}
+      {id:35,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:2.5,min_qty:101},{rate:3,min_qty:51},{rate:3.5,min_qty:31},{rate:5,min_qty:0}]}},
+      {id:36,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6.5,min_qty:101},{rate:7,min_qty:51},{rate:8,min_qty:21},{rate:12,min_qty:0}]}}
     ]},
     {name:"Cartão / Couchê 250g",items:[
-      {id:37,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:3,min_qty:101},{rate:3.5,min_qty:51},{rate:4.5,min_qty:31},{rate:5.5,min_qty:16},{rate:6,min_qty:0}]}},
-      {id:38,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:6,min_qty:101},{rate:7,min_qty:51},{rate:9,min_qty:21},{rate:13,min_qty:0}]}}
+      {id:37,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:3,min_qty:101},{rate:3.5,min_qty:51},{rate:4.5,min_qty:31},{rate:5.5,min_qty:16},{rate:6,min_qty:0}]}},
+      {id:38,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6,min_qty:101},{rate:7,min_qty:51},{rate:9,min_qty:21},{rate:13,min_qty:0}]}}
     ]},
     {name:"Adesivo",items:[
-      {id:39,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:5.5,min_qty:11},{rate:6.5,min_qty:0}]}},
-      {id:40,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:9,min_qty:21},{rate:10,min_qty:11},{rate:12,min_qty:0}]}}
+      {id:39,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:5.5,min_qty:11},{rate:6.5,min_qty:0}]}},
+      {id:40,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:9,min_qty:21},{rate:10,min_qty:11},{rate:12,min_qty:0}]}}
     ]},
     {name:"Vegetal",items:[
-      {id:41,name:"A4",pricing_rules:{rate:7,type:"flat"}},
-      {id:42,name:"A3",pricing_rules:{type:"tiered",tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
+      {id:41,name:"A4",pricing_rules:{rate:7,type:"flat",cut_options:[{label:"Corte manual",price:1}]}},
+      {id:42,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2}],tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
     ]},
     {name:"Vinílico A3",items:[
-      {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:1}]}},
-      {id:54,name:"Transparente",pricing_rules:{rate:20,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:1}]}}
+      {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:2}]}},
+      {id:54,name:"Transparente",pricing_rules:{rate:20,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:2}]}}
     ]}
   ]},
   {id:2,name:"P/B",groups:[
     {name:"Impressoras P/B (2, 3 e 9)",items:[
       {id:43,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:0.2,min_qty:751},{rate:0.25,min_qty:501},{rate:0.35,min_qty:251},{rate:0.4,min_qty:101},{rate:0.5,min_qty:4},{rate:1,min_qty:0}],duplex:{min_qty:101,discount:0.05}}},
-      {id:44,name:"A3",pricing_rules:{rate:2,type:"flat"}}
+      {id:44,name:"A3",pricing_rules:{rate:2,type:"flat"},cut_options:[{label:"Corte manual",price:2}]}
     ]},
     {name:"Plotter",no_cut:true,items:[
       {id:45,name:"A2 traço",pricing_rules:{rate:7.15,type:"flat"}},
