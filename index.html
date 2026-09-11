@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -205,7 +206,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       <div class="flex items-center gap-3">
         <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4-w.png" alt="Logo Xerox" class="h-9" style="cursor:pointer" onclick="logoClick()" title="Limpar tudo e voltar para Color">
         <h1 class="text-xl font-bold">Calculadora Xerox do Victor</h1>
-        <span id="appVersion" class="text-xs text-gray-400" style="cursor:default" title="desenvolvido por Bruno Barcelos">v1.25</span>
+        <span id="appVersion" class="text-xs text-gray-400" style="cursor:default" title="desenvolvido por Bruno Barcelos">v1.29</span>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="limparTudo()" class="btn btn-sm bg-gray-800 text-white hover:bg-gray-700 border-none">🗑️ Limpar tudo</button>
@@ -265,7 +266,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
         <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4.png" alt="Logo Xerox do Victor" class="h-9">
         <div>
           <h2 class="text-lg font-bold">Ordem de Serviço</h2>
-          <p class="text-xs text-gray-500">Setor de Grandes Formatos — Vinil / Lona</p>
+          <p class="text-xs text-gray-500">Setor de Grandes Formatos — Vinil / Lona / PVC</p>
         </div>
       </div>
       <div class="px-6 py-4 flex flex-col gap-3">
@@ -306,8 +307,8 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 const categories = [
   {id:1,name:"Color",groups:[
     {name:"Papel comum",items:[
-      {id:27,name:"A4",pricing_rules:{type:"tiered",tiers:[{rate:1.2,min_qty:111},{rate:2,min_qty:51},{rate:2.5,min_qty:31},{rate:3,min_qty:16},{rate:3.5,min_qty:0}]}},
-      {id:28,name:"A3",pricing_rules:{type:"tiered",cut_price:2,tiers:[{rate:3.5,min_qty:101},{rate:4.5,min_qty:51},{rate:5.5,min_qty:21},{rate:6,min_qty:11},{rate:7,min_qty:0}]}}
+      {id:27,name:"A4",pricing_rules:{type:"tiered",duplex_allowed:true,tiers:[{rate:1.2,min_qty:111},{rate:2,min_qty:51},{rate:2.5,min_qty:31},{rate:3,min_qty:16},{rate:3.5,min_qty:0}]}},
+      {id:28,name:"A3",pricing_rules:{type:"tiered",cut_price:2,duplex_allowed:true,tiers:[{rate:3.5,min_qty:101},{rate:4.5,min_qty:51},{rate:5.5,min_qty:21},{rate:6,min_qty:11},{rate:7,min_qty:0}]}}
     ]},
     {name:"Plotter",no_cut:true,items:[
       {id:29,name:"A2 traço",pricing_rules:{rate:10.45,type:"flat"}},
@@ -318,20 +319,20 @@ const categories = [
       {id:34,name:"A0 imagem",pricing_rules:{rate:79.85,type:"flat"}}
     ]},
     {name:"Cartão / Couchê 180/170g",items:[
-      {id:35,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:2.5,min_qty:101},{rate:3,min_qty:51},{rate:3.5,min_qty:31},{rate:5,min_qty:0}]}},
-      {id:36,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6.5,min_qty:101},{rate:7,min_qty:51},{rate:8,min_qty:21},{rate:12,min_qty:0}]}}
+      {id:35,name:"A4",pricing_rules:{type:"tiered",duplex_allowed:true,cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:2.5,min_qty:101},{rate:3,min_qty:51},{rate:3.5,min_qty:31},{rate:5,min_qty:0}]}},
+      {id:36,name:"A3",pricing_rules:{type:"tiered",duplex_allowed:true,cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6.5,min_qty:101},{rate:7,min_qty:51},{rate:8,min_qty:21},{rate:12,min_qty:0}]}}
     ]},
     {name:"Cartão / Couchê 250g",items:[
-      {id:37,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:3,min_qty:101},{rate:3.5,min_qty:51},{rate:4.5,min_qty:31},{rate:5.5,min_qty:16},{rate:6,min_qty:0}]}},
-      {id:38,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6,min_qty:101},{rate:7,min_qty:51},{rate:9,min_qty:21},{rate:13,min_qty:0}]}}
+      {id:37,name:"A4",pricing_rules:{type:"tiered",duplex_allowed:true,cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:3,min_qty:101},{rate:3.5,min_qty:51},{rate:4.5,min_qty:31},{rate:5.5,min_qty:16},{rate:6,min_qty:0}]}},
+      {id:38,name:"A3",pricing_rules:{type:"tiered",duplex_allowed:true,cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:6,min_qty:101},{rate:7,min_qty:51},{rate:9,min_qty:21},{rate:13,min_qty:0}]}}
     ]},
     {name:"Adesivo",items:[
       {id:39,name:"A4",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:1},{label:"Corte na máquina",price:5}],tiers:[{rate:5.5,min_qty:11},{rate:6.5,min_qty:0}]}},
       {id:40,name:"A3",pricing_rules:{type:"tiered",cut_options:[{label:"Corte manual",price:2},{label:"Corte na máquina",price:10}],tiers:[{rate:9,min_qty:21},{rate:10,min_qty:11},{rate:12,min_qty:0}]}}
     ]},
     {name:"Vegetal",items:[
-      {id:41,name:"A4",pricing_rules:{rate:7,type:"flat",cut_price:1}},
-      {id:42,name:"A3",pricing_rules:{type:"tiered",cut_price:2,tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
+      {id:41,name:"A4",pricing_rules:{rate:7,type:"flat",cut_price:1,duplex_allowed:true}},
+      {id:42,name:"A3",pricing_rules:{type:"tiered",cut_price:2,duplex_allowed:true,tiers:[{rate:8,min_qty:12},{rate:10,min_qty:0}]}}
     ]},
     {name:"Vinílico A3",items:[
       {id:53,name:"Branco",pricing_rules:{rate:15,type:"flat",cut_options:[{label:"Corte na máquina",price:10},{label:"Corte manual",price:2}]}},
@@ -340,8 +341,8 @@ const categories = [
   ]},
   {id:2,name:"P/B",groups:[
     {name:"Impressoras P/B (2, 3 e 9)",items:[
-      {id:43,name:"A4",pricing_rules:{type:"tiered",cut_price:1,tiers:[{rate:0.2,min_qty:751},{rate:0.25,min_qty:501},{rate:0.35,min_qty:251},{rate:0.4,min_qty:101},{rate:0.5,min_qty:4},{rate:1,min_qty:0}],duplex:{min_qty:101,discount:0.05}}},
-      {id:44,name:"A3",pricing_rules:{rate:2,type:"flat",cut_price:2}}
+      {id:43,name:"A4",pricing_rules:{type:"tiered",cut_price:1,duplex_allowed:true,tiers:[{rate:0.2,min_qty:751},{rate:0.25,min_qty:501},{rate:0.35,min_qty:251},{rate:0.4,min_qty:101},{rate:0.5,min_qty:4},{rate:1,min_qty:0}],duplex:{min_qty:101,discount:0.05}}},
+      {id:44,name:"A3",pricing_rules:{rate:2,type:"flat",cut_price:2,duplex_allowed:true}}
     ]},
     {name:"Plotter",no_cut:true,items:[
       {id:45,name:"A2 traço",pricing_rules:{rate:7.15,type:"flat"}},
@@ -352,8 +353,8 @@ const categories = [
       {id:50,name:"A0 imagem",pricing_rules:{rate:63.5,type:"flat"}}
     ]},
     {name:"Cartão / Couchê",items:[
-      {id:61,name:"A4",pricing_rules:{type:"tiered_cut",tiers:[{min_qty:111,rate_sem:1.20,rate_com:1.20},{min_qty:51,rate_sem:1.50,rate_com:2.20},{min_qty:16,rate_sem:2.50,rate_com:3.00},{min_qty:0,rate_sem:2.80,rate_com:3.50}]}},
-      {id:62,name:"A3",pricing_rules:{type:"tiered_cut",tiers:[{min_qty:111,rate_sem:3.00,rate_com:3.00},{min_qty:51,rate_sem:3.50,rate_com:3.50},{min_qty:16,rate_sem:4.00,rate_com:4.50},{min_qty:0,rate_sem:4.50,rate_com:5.00}]}}
+      {id:61,name:"A4",pricing_rules:{type:"tiered_cut",duplex_allowed:true,tiers:[{min_qty:111,rate_sem:1.20,rate_com:1.20},{min_qty:51,rate_sem:1.50,rate_com:2.20},{min_qty:16,rate_sem:2.50,rate_com:3.00},{min_qty:0,rate_sem:2.80,rate_com:3.50}]}},
+      {id:62,name:"A3",pricing_rules:{type:"tiered_cut",duplex_allowed:true,tiers:[{min_qty:111,rate_sem:3.00,rate_com:3.00},{min_qty:51,rate_sem:3.50,rate_com:3.50},{min_qty:16,rate_sem:4.00,rate_com:4.50},{min_qty:0,rate_sem:4.50,rate_com:5.00}]}}
     ]}
   ]},
   {id:3,name:"Grandes Formatos",groups:[
@@ -368,6 +369,13 @@ const categories = [
     ]},
     {name:"Canvas",items:[
       {id:57,name:"",pricing_rules:{type:"canvas",rate:120,max_roll:0.96}}
+    ]},
+    {name:"PVC",items:[
+      {id:64,name:"",pricing_rules:{type:"pvc",tiers:[{max_m2:0.25,rate:250},{max_m2:1,rate:220},{max_m2:2,rate:200},{max_m2:null,rate:180}],unit_add:5,min_charge:15}}
+    ]},
+    {name:"PVC — Modelos pré-definidos",no_cut:true,items:[
+      {id:65,name:"Placa 30cm × 40cm",pricing_rules:{type:"flat",rate:35,width:0.30,height:0.40}},
+      {id:66,name:"Placa 40cm × 60cm",pricing_rules:{type:"flat",rate:54,width:0.40,height:0.60}}
     ]}
   ]},
   {id:4,name:"Revelação Fotográfica",groups:[
@@ -378,6 +386,7 @@ const categories = [
   ]},
   {id:5,name:"Balcão",groups:[
     {name:"Plastificação",no_cut:true,needs_colaborador:true,items:[
+      {id:67,name:"Plastificação A5",pricing_rules:{rate:7,type:"flat"}},
       {id:59,name:"Plastificação A4",pricing_rules:{type:"tiered",tiers:[{rate:6,min_qty:21},{rate:7,min_qty:11},{rate:8,min_qty:7},{rate:9,min_qty:0}]}},
       {id:60,name:"Plastificação A3",pricing_rules:{type:"tiered",tiers:[{rate:10,min_qty:21},{rate:12,min_qty:11},{rate:13,min_qty:7},{rate:15,min_qty:0}]}}
     ]},
@@ -394,6 +403,7 @@ const findRate = (q,t)=>{for(const r of t)if(q>=r.min_qty)return r.rate;return t
 const findAdh = (m,t)=>{for(const r of t)if(m>=r.min_m2)return r.rate;return t[t.length-1]?.rate||0};
 const findRateIdx = (q,t)=>{for(let i=0;i<t.length;i++)if(q>=t[i].min_qty)return i;return t.length-1};
 const findAdhIdx = (m,t)=>{for(let i=0;i<t.length;i++)if(m>=t[i].min_m2)return i;return t.length-1};
+const findPVCIdx = (m,t)=>{for(let i=0;i<t.length;i++)if(t[i].max_m2===null||m<=t[i].max_m2)return i;return t.length-1};
 const escapeHtml = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function recalc(){
@@ -430,6 +440,10 @@ function calcRow(row){
     calcCanvasRow(row,rules);
     return;
   }
+  if(rules.type==="pvc"){
+    recalcPVCGroup(row.closest("[data-group]"));
+    return;
+  }
   if(rules.type==="tiered_cut"){
     calcTieredCutRow(row,rules);
     return;
@@ -463,7 +477,9 @@ function calcRow(row){
   const cut=row.querySelector("[data-cut]");
   const cutOptionsSelect=row.querySelector("[data-cut-options]");
   const cutPrice=cutOptionsSelect?(parseFloat(cutOptionsSelect.value)||0):(rules.cut_price??1);
-  if(cut&&cut.checked&&qty>0) sub+=qty*cutPrice;
+  const duplexChecked=row.querySelector("[data-duplex]")?.checked;
+  const cutQty=duplexChecked?Math.ceil(qty/2):qty;
+  if(cut&&cut.checked&&qty>0) sub+=cutQty*cutPrice;
   const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
   recalc();
 }
@@ -521,6 +537,49 @@ function recalcAdhesiveGroup(groupEl){
   recalc();
 }
 
+// Calcula PVC pela área total do grupo. A faixa de R$/m² é definida pela
+// soma das áreas de todas as linhas; além disso, cada placa acrescenta um
+// valor fixo por unidade. O mínimo do pedido também é aplicado ao grupo.
+function recalcPVCGroup(groupEl){
+  if(!groupEl) return;
+  const rows=[...groupEl.querySelectorAll("tr[data-rules]")];
+  if(rows.length===0) return;
+  const rules=JSON.parse(rows[0].dataset.rules);
+
+  const data=rows.map(row=>{
+    const w=parseFloat(row.querySelector("[data-w]")?.value)||0;
+    const h=parseFloat(row.querySelector("[data-h]")?.value)||0;
+    const qty=parseFloat(row.querySelector("[data-qty]")?.value)||0;
+    const m2=(w>0&&h>0&&qty>0)?w*h*qty:0;
+    const e=row.querySelector("[data-m2]");if(e)e.textContent=m2.toFixed(3);
+    return {row,m2,qty:m2>0?qty:0};
+  });
+
+  const totalM2=data.reduce((sum,d)=>sum+d.m2,0);
+  const totalQty=data.reduce((sum,d)=>sum+d.qty,0);
+  let activeIdx=-1,rate=0;
+  if(totalM2>0){
+    activeIdx=findPVCIdx(totalM2,rules.tiers);
+    rate=rules.tiers[activeIdx].rate;
+  }
+
+  const rawTotal=totalM2>0?(totalM2*rate)+(totalQty*(rules.unit_add||0)):0;
+  const finalTotal=totalM2>0?Math.max(rawTotal,rules.min_charge||0):0;
+  const scale=rawTotal>0?finalTotal/rawTotal:0;
+
+  data.forEach(({row,m2,qty})=>{
+    const rowRaw=m2>0?(m2*rate)+(qty*(rules.unit_add||0)):0;
+    const sub=rowRaw*scale;
+    const st=row.querySelector("[data-st]");if(st)st.textContent=fmt(sub);
+    row.querySelectorAll(".tier-rate").forEach((el,i)=>{
+      el.classList.toggle("font-bold",totalM2>0&&i===activeIdx);
+      el.classList.toggle("text-gray-900",totalM2>0&&i===activeIdx);
+    });
+  });
+
+  recalc();
+}
+
 // Calcula o preço do Canvas: cobrado por metro linear (não por m²), limitado
 // pela largura do rolo (max_roll). Se as duas medidas excederem o rolo, a
 // impressão não é possível.
@@ -555,19 +614,25 @@ function calcCanvasRow(row,rules){
   recalc();
 }
 
-// Calcula itens tiered em que o corte muda a própria faixa de preço
-// (não é um adicional fixo, é uma tabela sem-corte/com-corte por faixa).
+// Calcula itens tiered em que o corte muda a própria faixa de preço.
+// Em frente e verso, a parte correspondente ao corte é cobrada por folha física
+// (ceil(qtd de páginas / 2)), enquanto a impressão continua sendo cobrada por página.
 function calcTieredCutRow(row,rules){
   const qty=parseFloat(row.querySelector("[data-qty]")?.value)||0;
   const cutChecked=row.querySelector("[data-cut]")?.checked;
+  const duplexChecked=row.querySelector("[data-duplex]")?.checked;
   let sub=0;
   let activeIdx=-1;
   if(qty>0){
     activeIdx=rules.tiers.findIndex(t=>qty>=t.min_qty);
     if(activeIdx>=0){
       const tier=rules.tiers[activeIdx];
-      const rate=cutChecked?tier.rate_com:tier.rate_sem;
-      sub=qty*rate;
+      sub=qty*tier.rate_sem;
+      if(cutChecked){
+        const cutPerUnit=Math.max(0,tier.rate_com-tier.rate_sem);
+        const cutQty=duplexChecked?Math.ceil(qty/2):qty;
+        sub+=cutQty*cutPerUnit;
+      }
     }
   }
   row.querySelectorAll(".tier-rate").forEach((el,i)=>{
@@ -611,6 +676,8 @@ function removerLinha(btn){
   atualizarBotoesRemover(tbody,itemId);
   if(rules.type==="adhesive"){
     recalcAdhesiveGroup(groupEl);
+  } else if(rules.type==="pvc"){
+    recalcPVCGroup(groupEl);
   } else {
     recalc();
   }
@@ -659,11 +726,12 @@ categories.forEach((c,ci)=>{
   c.groups.forEach(g=>{
     const isAdh=g.items.some(i=>i.pricing_rules?.type==="adhesive");
     const isCanvas=g.items.some(i=>i.pricing_rules?.type==="canvas");
+    const isPVCGroup=g.items.some(i=>i.pricing_rules?.type==="pvc");
     const hasTieredCut=g.items.some(i=>i.pricing_rules?.type==="tiered_cut");
-    const hasDuplex=g.items.some(i=>i.pricing_rules?.duplex);
+    const hasDuplex=g.items.some(i=>i.pricing_rules?.duplex||i.pricing_rules?.duplex_allowed);
     const needsColaborador=g.needs_colaborador===true;
-    const showCut=!isAdh&&!isCanvas&&!g.no_cut&&!hasTieredCut;
-    const showDup=showCut||isAdh||isCanvas||hasTieredCut;
+    const showCut=!isAdh&&!isCanvas&&!isPVCGroup&&!g.no_cut&&!hasTieredCut;
+    const showDup=showCut||isAdh||isCanvas||isPVCGroup||hasTieredCut;
     const finishingsList=(g.items.find(i=>i.pricing_rules?.finishings)?.pricing_rules.finishings)||[];
     const grp=document.createElement("div");grp.className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm";grp.dataset.group=g.name;
     let html=`<div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2"><div class="w-1 h-6 bg-gray-500 rounded-full"></div><h3 class="font-semibold text-sm">${g.name}</h3><span class="ml-auto text-xs text-gray-500">Subtotal: <span class="font-bold text-gray-900" data-gt>R$ 0,00</span></span></div>`;
@@ -674,7 +742,7 @@ categories.forEach((c,ci)=>{
     if(hasTieredCut) html+=`<th class="col-cut">Corte?</th>`;
     if(hasDuplex) html+=`<th class="text-center">Frente e verso?</th>`;
     if(needsColaborador) html+=`<th>Colaborador</th>`;
-    if(isAdh) html+=`<th>Largura</th><th>Altura</th><th>m²</th>`;
+    if(isAdh||isPVCGroup) html+=`<th>Largura</th><th>Altura</th><th>m²</th>`;
     if(isCanvas) html+=`<th>Largura</th><th>Altura</th>`;
     finishingsList.forEach(f=>html+=`<th class="text-center">${f.label}</th>`);
     html+=`<th class="col-sub">Subtotal</th>`;
@@ -686,9 +754,11 @@ categories.forEach((c,ci)=>{
       if(r.type==="flat") pd=`R$ ${r.rate.toFixed(2)}`;
       else if(r.type==="tiered") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}</span>`).join(" | ");
       else if(r.type==="adhesive") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}/m²</span>`).join(" | ");
+      else if(r.type==="pvc") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate.toFixed(2)}/m²</span>`).join(" | ")+` + R$ ${(r.unit_add||0).toFixed(2)}/un.`;
       else if(r.type==="canvas") pd=`R$ ${r.rate.toFixed(2)}/m linear`;
       else if(r.type==="tiered_cut") pd=r.tiers.map(t=>`<span class="tier-rate">R$ ${t.rate_sem.toFixed(2)}${t.rate_sem!==t.rate_com?" / "+t.rate_com.toFixed(2)+" c/corte":""}</span>`).join(" | ");
       const isAdhesive=r?.type==="adhesive";
+      const isPVC=r?.type==="pvc";
       const isCanvasItem=r?.type==="canvas";
       const isTieredCut=r?.type==="tiered_cut";
       const isVariable=r?.type==="variable";
@@ -706,9 +776,9 @@ categories.forEach((c,ci)=>{
         }
       }
       if(isTieredCut) html+=`<td class="col-cut"><input type="checkbox" data-cut class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
-      if(hasDuplex) html+=r.duplex?`<td class="text-center"><input type="checkbox" data-duplex class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`:`<td></td>`;
+      if(hasDuplex) html+=(r.duplex||r.duplex_allowed)?`<td class="text-center"><input type="checkbox" data-duplex class="toggle toggle-xs" style="--tglbg:#111827;background:#d1d5db" onchange="calcRow(this.closest('[data-rules]'))"></td>`:`<td></td>`;
       if(needsColaborador) html+=`<td><input type="text" data-colaborador class="input input-bordered input-xs w-full bg-white" placeholder="Nome"></td>`;
-      if(isAdhesive) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td class="text-xs text-gray-500" data-m2>0,000</td>`;
+      if(isAdhesive||isPVC) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td class="text-xs text-gray-500" data-m2>0,000</td>`;
       if(isCanvasItem) html+=`<td><input type="number" min="0" step="0.01" value="" data-w class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td><td><input type="number" min="0" step="0.01" value="" data-h class="input input-bordered input-xs w-full bg-white text-right" placeholder="0,00" oninput="calcRow(this.closest('[data-rules]'))"></td>`;
       (r.finishings||[]).forEach(f=>{
         html+=`<td class="text-center"><input type="checkbox" data-finishing="${f.key}" onchange="calcRow(this.closest('[data-rules]'))"></td>`;
@@ -888,6 +958,18 @@ function gerarRecibo(){
           return;
         }
 
+        if(rules.type==="pvc"){
+          const w=parseFloat(tr.querySelector("[data-w]")?.value)||0;
+          const h=parseFloat(tr.querySelector("[data-h]")?.value)||0;
+          const qty=parseFloat(tr.querySelector("[data-qty]")?.value)||0;
+          if(w>0&&h>0&&qty>0){
+            const sub=subEl?subEl.textContent:fmt(0);
+            const unitVal=parse(sub)/qty;
+            linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:`${w}m × ${h}m`,qtd:qty,unit:fmt(unitVal),sub:sub});
+          }
+          return;
+        }
+
         const qty=parseFloat(tr.querySelector("[data-qty]")?.value)||0;
         if(qty>0){
           const sub=subEl?subEl.textContent:fmt(0);
@@ -965,8 +1047,9 @@ function abrirOS(){
   document.getElementById("osNota").value="";
   document.getElementById("osEntrega").value="";
 
-  // Monta os itens: um bloco por linha de adesivo já preenchida na calculadora
-  // (largura/altura/quantidade/acabamento), ou um bloco em branco se não houver nenhuma.
+  // Monta os itens: um bloco por linha relevante de Grandes Formatos já
+  // preenchida na calculadora (largura/altura/quantidade/acabamento), ou um
+  // bloco em branco se não houver nenhuma.
   const container=document.getElementById("osItemsContainer");
   container.innerHTML="";
 
@@ -976,6 +1059,8 @@ function abrirOS(){
     const temValor=row=>(parseFloat(row.querySelector("[data-qty]")?.value)||0)>0;
     const simplesRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte simples"] tr[data-rules]')].filter(temValor);
     const contornoRows=[...catAdesivos.querySelectorAll('[data-group="Leitoso corte contorno"] tr[data-rules]')].filter(temValor);
+    const pvcRows=[...catAdesivos.querySelectorAll('[data-group="PVC"] tr[data-rules]')].filter(temValor);
+    const pvcPredefRows=[...catAdesivos.querySelectorAll('[data-group="PVC — Modelos pré-definidos"] tr[data-rules]')].filter(temValor);
 
     simplesRows.forEach(row=>{
       itensImportados.push({
@@ -991,6 +1076,23 @@ function abrirOS(){
         altura:row.querySelector("[data-h]")?.value||"",
         qtd:row.querySelector("[data-qty]")?.value||"",
         acabamento:"Corte contorno"
+      });
+    });
+    pvcRows.forEach(row=>{
+      itensImportados.push({
+        largura:row.querySelector("[data-w]")?.value||"",
+        altura:row.querySelector("[data-h]")?.value||"",
+        qtd:row.querySelector("[data-qty]")?.value||"",
+        acabamento:"PVC"
+      });
+    });
+    pvcPredefRows.forEach(row=>{
+      const rules=JSON.parse(row.dataset.rules);
+      itensImportados.push({
+        largura:rules.width||"",
+        altura:rules.height||"",
+        qtd:row.querySelector("[data-qty]")?.value||"",
+        acabamento:"PVC"
       });
     });
   }
