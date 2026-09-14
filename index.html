@@ -206,7 +206,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       <div class="flex items-center gap-3">
         <img src="https://raw.githubusercontent.com/bnoru/calculadora-xerox/refs/heads/main/path4-w.png" alt="Logo Xerox" class="h-9" style="cursor:pointer" onclick="logoClick()" title="Limpar tudo e voltar para Color">
         <h1 class="text-xl font-bold">Calculadora Xerox do Victor</h1>
-        <span id="appVersion" class="text-xs text-gray-400" style="cursor:default" title="desenvolvido por Bruno Barcelos">v1.29</span>
+        <span id="appVersion" class="text-xs text-gray-400" style="cursor:default" title="desenvolvido por Bruno Barcelos">v1.30</span>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="limparTudo()" class="btn btn-sm bg-gray-800 text-white hover:bg-gray-700 border-none">🗑️ Limpar tudo</button>
@@ -359,10 +359,10 @@ const categories = [
   ]},
   {id:3,name:"Grandes Formatos",groups:[
     {name:"Leitoso corte simples",items:[
-      {id:51,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:50,min_m2:4.01},{rate:55,min_m2:1.01},{rate:60,min_m2:0}],min_charge:30}}
+      {id:51,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:50,min_m2:4.01},{rate:55,min_m2:1.01},{rate:60,min_m2:0}],min_charge:30,finishings:[{key:"laminacao_branca",label:"Laminação branca",price:40,per_m2:true}]}}
     ]},
     {name:"Leitoso corte contorno",items:[
-      {id:52,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:55,min_m2:4.01},{rate:65,min_m2:2.01},{rate:80,min_m2:1.01},{rate:120,min_m2:0}],min_charge:45}}
+      {id:52,name:"",pricing_rules:{type:"adhesive",bleed:0.002,tiers:[{rate:55,min_m2:4.01},{rate:65,min_m2:2.01},{rate:80,min_m2:1.01},{rate:120,min_m2:0}],min_charge:45,finishings:[{key:"laminacao_branca",label:"Laminação branca",price:40,per_m2:true}]}}
     ]},
     {name:"Lona/Banner",items:[
       {id:58,name:"",pricing_rules:{type:"adhesive",bleed:0,tiers:[{rate:60,min_m2:4.01},{rate:70,min_m2:1.01},{rate:90,min_m2:0}],finishings:[{key:"madeira",label:"Madeira",price:10,condition:"m2<=1"},{key:"ilhos",label:"Ilhós",price:30}]}}
@@ -519,7 +519,11 @@ function recalcAdhesiveGroup(groupEl){
       (rules.finishings||[]).forEach(f=>{
         const chk=row.querySelector(`[data-finishing="${f.key}"]`);
         if(chk&&chk.checked){
-          if(f.condition==="m2<=1"){
+          if(f.per_m2){
+            // Acabamentos por área (ex.: laminação branca) não recebem
+            // progressão de desconto: valor fixo por m² da própria linha.
+            sub+=rowM2[i]*f.price;
+          } else if(f.condition==="m2<=1"){
             if(rowM2[i]<=1) sub+=f.price;
           } else {
             sub+=f.price;
@@ -977,6 +981,7 @@ function gerarRecibo(){
           const cutTxt=(cutEl&&cutEl.checked)?" + corte":"";
           const duplexEl=tr.querySelector("[data-duplex]");
           const duplexTxt=(duplexEl&&duplexEl.checked)?" + frente e verso":"";
+          const finishingsTxt=(rules.finishings||[]).filter(f=>tr.querySelector(`[data-finishing="${f.key}"]`)?.checked).map(f=>` + ${f.label}`).join("");
           const colabEl=tr.querySelector("[data-colaborador]");
           let colabTxt="";
           if(colabEl){
@@ -984,7 +989,7 @@ function gerarRecibo(){
             colabTxt=colabVal?` — Colaborador: ${colabVal}`:` — Colaborador: ______________`;
           }
           const unitVal=qty>0?parse(sub)/qty:0;
-          linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:name+cutTxt+duplexTxt+colabTxt,qtd:qty,unit:fmt(unitVal),sub:sub});
+          linhas.push({categoria:(cat?cat.name+" - ":"")+groupName,item:name+cutTxt+duplexTxt+finishingsTxt+colabTxt,qtd:qty,unit:fmt(unitVal),sub:sub});
         }
       });
     }
@@ -1067,7 +1072,8 @@ function abrirOS(){
         largura:row.querySelector("[data-w]")?.value||"",
         altura:row.querySelector("[data-h]")?.value||"",
         qtd:row.querySelector("[data-qty]")?.value||"",
-        acabamento:"Corte simples"
+        acabamento:"Corte simples",
+        obs:row.querySelector('[data-finishing="laminacao_branca"]')?.checked?"Laminação branca":""
       });
     });
     contornoRows.forEach(row=>{
@@ -1075,7 +1081,8 @@ function abrirOS(){
         largura:row.querySelector("[data-w]")?.value||"",
         altura:row.querySelector("[data-h]")?.value||"",
         qtd:row.querySelector("[data-qty]")?.value||"",
-        acabamento:"Corte contorno"
+        acabamento:"Corte contorno",
+        obs:row.querySelector('[data-finishing="laminacao_branca"]')?.checked?"Laminação branca":""
       });
     });
     pvcRows.forEach(row=>{
